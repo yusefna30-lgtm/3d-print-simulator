@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>محاكي مقاسات الطباعة 3D — هودي | عِزوة</title>
+    <title>محاكي طباعة الهودي الواقعي | عِزوة</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         body {
@@ -14,385 +13,286 @@
             color: #f5f5f4;
             margin: 0;
             overflow: hidden;
-            touch-action: none;
-        }
-        #canvas-container {
-            width: 100vw;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
+            user-select: none;
         }
         .glass-panel {
-            background: rgba(24, 22, 21, 0.88);
+            background: rgba(24, 22, 21, 0.90);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(212, 175, 55, 0.25);
         }
-        .gold-accent {
-            color: #D4AF37;
-        }
-        .gold-bg {
-            background-color: #D4AF37;
-            color: #121212;
-        }
+        .gold-accent { color: #D4AF37; }
+        .gold-bg { background-color: #D4AF37; color: #121212; }
         .size-btn.active {
             background-color: #D4AF37;
             color: #121212;
             font-weight: 700;
             border-color: #D4AF37;
         }
+        .angle-btn.active {
+            background-color: #D4AF37;
+            color: #121212;
+            font-weight: 700;
+        }
         .color-dot.active {
             outline: 2px solid #D4AF37;
             outline-offset: 2px;
             transform: scale(1.15);
         }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* حاوية عرض الهودي الحقيقي */
+        .mockup-stage {
+            position: relative;
+            width: 340px;
+            height: 360px;
+            overflow: hidden;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            background-color: #b8b8b8;
         }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        /* صورة الهودي الثلاثية مقصوصة لعرض زاوية واحدة بوضوح */
+        .hoodie-sprite {
+            position: absolute;
+            top: 0;
+            width: 300%;
+            height: 100%;
+            max-width: none;
+            object-fit: cover;
+            transition: left 0.45s cubic-bezier(0.25, 1, 0.5, 1), filter 0.3s ease;
+        }
+        /* طبقة التلوين الواقعي للقماش */
+        .color-overlay {
+            position: absolute;
+            inset: 0;
+            mix-blend-mode: multiply;
+            pointer-events: none;
+            transition: background-color 0.3s ease;
+        }
+        /* طبقة التصميم المطبوع */
+        .print-layer {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+            mix-blend-mode: multiply;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .print-layer.on-dark {
+            mix-blend-mode: normal;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
         }
     </style>
 </head>
-<body>
+<body class="h-screen w-screen flex flex-col justify-between items-center relative">
 
-    <!-- حاوية المجسم ثلاثي الأبعاد -->
-    <div id="canvas-container"></div>
-
-    <!-- الشريط العلوي (Header) -->
-    <header class="fixed top-0 left-0 right-0 z-20 p-3 flex justify-between items-center pointer-events-none">
-        <div class="glass-panel px-3 py-1.5 rounded-xl flex items-center gap-2.5 pointer-events-auto">
+    <!-- الشريط العلوي -->
+    <header class="w-full p-3 flex justify-between items-center z-20">
+        <div class="glass-panel px-3 py-1.5 rounded-xl flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-lg gold-bg flex items-center justify-center font-black text-sm">عِزوة</div>
             <div>
-                <h1 class="text-xs sm:text-sm font-bold text-white leading-tight">محاكي طباعة الهودي 3D</h1>
-                <p class="text-[10px] text-stone-400">اسحب للتدوير 360° ومشاهدة الوجهين</p>
+                <h1 class="text-xs sm:text-sm font-bold text-white leading-tight">محاكي طباعة الهودي</h1>
+                <p class="text-[10px] text-stone-400">اسحب الصورة يميناً أو يساراً للتقليب</p>
             </div>
         </div>
 
-        <div class="glass-panel px-3 py-1.5 rounded-xl pointer-events-auto">
-            <span class="text-[11px] font-bold gold-accent">هودي أوفر سايز</span>
+        <!-- أزرار الزوايا -->
+        <div class="glass-panel p-1 rounded-xl flex gap-1">
+            <button id="ang-front" onclick="setAngle('front')" class="angle-btn active px-2.5 py-1 rounded-lg text-xs transition">الأمام</button>
+            <button id="ang-side" onclick="setAngle('side')" class="angle-btn px-2.5 py-1 rounded-lg text-xs text-stone-300 transition">الكم</button>
+            <button id="ang-back" onclick="setAngle('back')" class="angle-btn px-2.5 py-1 rounded-lg text-xs text-stone-300 transition">الظهر</button>
         </div>
     </header>
 
-    <!-- أدوات التحكم الجانبية (الألوان ورفع التصميم) -->
-    <div class="fixed top-20 left-3 z-20 flex flex-col gap-2 pointer-events-auto">
-        <div class="glass-panel p-2 rounded-xl flex flex-col items-center gap-2.5">
-            <span class="text-[9px] text-stone-400">لون الهودي</span>
-            <button onclick="setColor('#18181b', this)" class="color-dot active w-6 h-6 rounded-full bg-[#18181b] border border-stone-600 transition" title="أسود مطفي"></button>
-            <button onclick="setColor('#4a1525', this)" class="color-dot w-6 h-6 rounded-full bg-[#4a1525] border border-stone-600 transition" title="عنابي داكن"></button>
-            <button onclick="setColor('#d6cbb8', this)" class="color-dot w-6 h-6 rounded-full bg-[#d6cbb8] border border-stone-600 transition" title="بيج رملي"></button>
-            <button onclick="setColor('#2d362e', this)" class="color-dot w-6 h-6 rounded-full bg-[#2d362e] border border-stone-600 transition" title="زيتي داكن"></button>
-            <button onclick="setColor('#3f3f46', this)" class="color-dot w-6 h-6 rounded-full bg-[#3f3f46] border border-stone-600 transition" title="رمادي فحمي"></button>
+    <!-- منطقة العرض الوسطى (الهودي الحقيقي) -->
+    <main class="flex-1 flex items-center justify-center w-full relative z-10 px-4">
+        <div id="stage" class="mockup-stage cursor-grab active:cursor-grabbing">
+            <!-- الصورة الحقيقية المرفوعة -->
+            <img id="hoodie-img" src="hoodie.jpg.jpg" alt="هودي" class="hoodie-sprite" style="left: 0%;">
+            
+            <!-- طبقة تغيير لون القماش -->
+            <div id="color-tint" class="color-overlay" style="background-color: transparent;"></div>
+
+            <!-- طبقة الطباعة -->
+            <div id="print-box" class="print-layer" style="top: 42%; left: 61%; width: 30px; height: 30px;">
+                <img id="print-img" src="" alt="التصميم" class="w-full h-full object-contain">
+            </div>
         </div>
 
-        <!-- زر رفع تصميم من الملفات -->
-        <label class="glass-panel p-2 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#D4AF37] transition text-center" title="ارفع تصميمك">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 gold-accent mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            <span class="text-[9px] font-bold text-white leading-tight">ارفع<br>تصميمك</span>
-            <input type="file" id="upload-design" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
-        </label>
-    </div>
+        <!-- أدوات الألوان ورفع التصميم العائمة -->
+        <div class="fixed left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2">
+            <div class="glass-panel p-2 rounded-xl flex flex-col items-center gap-2">
+                <span class="text-[9px] text-stone-400">اللون</span>
+                <button onclick="setColor('transparent', 'أبيض / أوف وايت', false, this)" class="color-dot active w-6 h-6 rounded-full bg-[#e5e5e5] border border-stone-500 transition" title="أبيض"></button>
+                <button onclick="setColor('#262629', 'أسود مطفي', true, this)" class="color-dot w-6 h-6 rounded-full bg-[#18181b] border border-stone-500 transition" title="أسود"></button>
+                <button onclick="setColor('#5e192c', 'عنابي داكن', true, this)" class="color-dot w-6 h-6 rounded-full bg-[#4a1525] border border-stone-500 transition" title="عنابي"></button>
+                <button onclick="setColor('#d8cab3', 'بيج رملي', false, this)" class="color-dot w-6 h-6 rounded-full bg-[#d6cbb8] border border-stone-500 transition" title="بيج"></button>
+                <button onclick="setColor('#3b473c', 'زيتي داكن', true, this)" class="color-dot w-6 h-6 rounded-full bg-[#2d362e] border border-stone-500 transition" title="زيتي"></button>
+            </div>
 
-    <!-- أزرار الزوايا السريعة يمين الشاشة -->
-    <div class="fixed top-20 right-3 z-20 flex flex-col gap-1.5 pointer-events-auto">
-        <button onclick="rotateTo('front')" class="glass-panel px-2.5 py-1.5 rounded-lg text-[10px] font-bold hover:border-[#D4AF37] transition">الأمام</button>
-        <button onclick="rotateTo('back')" class="glass-panel px-2.5 py-1.5 rounded-lg text-[10px] font-bold hover:border-[#D4AF37] transition">الظهر</button>
-        <button onclick="rotateTo('sleeve')" class="glass-panel px-2.5 py-1.5 rounded-lg text-[10px] font-bold hover:border-[#D4AF37] transition">الكم</button>
-        <button id="btn-autorotate" onclick="toggleAutoRotate()" class="glass-panel px-2.5 py-1.5 rounded-lg text-[10px] font-bold gold-accent border-[#D4AF37]/50 transition">دوران: إيقاف</button>
-    </div>
+            <label class="glass-panel p-2 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#D4AF37] transition text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 gold-accent mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <span class="text-[9px] font-bold text-white leading-tight">ارفع<br>تصميمك</span>
+                <input type="file" accept="image/*" class="hidden" onchange="uploadDesign(event)">
+            </label>
+        </div>
+    </main>
 
-    <!-- الشريط السفلي المدمج للمقاسات -->
-    <div class="fixed bottom-0 left-0 right-0 z-20 p-3 pointer-events-none">
-        <div class="max-w-xl mx-auto glass-panel rounded-2xl p-3 pointer-events-auto shadow-2xl">
+    <!-- الشريط السفلي للمقاسات -->
+    <footer class="w-full p-3 z-20">
+        <div class="max-w-xl mx-auto glass-panel rounded-2xl p-3 shadow-2xl">
             <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-bold text-white">اختر مقاس ومكان الطباعة:</span>
-                <span id="size-desc" class="text-[11px] gold-accent font-semibold">صدر جانبي (5×5 سم)</span>
+                <span class="text-xs font-bold text-white">اختر مقاس الطباعة:</span>
+                <span id="size-label" class="text-[11px] gold-accent font-bold">صدر جانبي (5×5 سم)</span>
             </div>
 
             <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                <button onclick="setPrintSize('pocket', this)" class="size-btn active shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">
-                    شعار صدر (5×5 سم)
-                </button>
-                <button onclick="setPrintSize('chest_mid', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">
-                    وسط الصدر (10×10 سم)
-                </button>
-                <button onclick="setPrintSize('chest_wide', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">
-                    صدر عريض (25×8 سم)
-                </button>
-                <button onclick="setPrintSize('chest_full', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">
-                    صدر كبير (20×20 سم)
-                </button>
-                <button onclick="setPrintSize('back_mid', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">
-                    ظهر وسط (25×30 سم)
-                </button>
-                <button onclick="setPrintSize('back_full', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">
-                    ظهر كامل (30×40 سم)
-                </button>
-                <button onclick="setPrintSize('sleeve_side', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">
-                    الكم (8×8 سم)
-                </button>
+                <button onclick="setSize('pocket', this)" class="size-btn active shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">شعار صدر (5×5 سم)</button>
+                <button onclick="setSize('chest_mid', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">وسط الصدر (10×10 سم)</button>
+                <button onclick="setSize('chest_wide', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">صدر عريض (25×8 سم)</button>
+                <button onclick="setSize('chest_full', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">صدر كبير (20×20 سم)</button>
+                <button onclick="setSize('back_mid', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">ظهر وسط (25×30 سم)</button>
+                <button onclick="setSize('back_full', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">ظهر كامل (30×40 سم)</button>
+                <button onclick="setSize('sleeve', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">الكم (8×8 سم)</button>
             </div>
 
-            <button onclick="sendWhatsApp()" class="w-full mt-1 py-2.5 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
+            <button onclick="orderWhatsApp()" class="w-full mt-1 py-2.5 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
                 <span>اعتماد هذا المقاس والطلب عبر واتساب</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
             </button>
         </div>
-    </div>
+    </footer>
 
     <script>
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(0, 0.15, 5.0);
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        container.appendChild(renderer.domElement);
-
-        // الإضاءة لإبراز طيّات وتفاصيل الهودي
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.72);
-        scene.add(ambientLight);
-
-        const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.85);
-        dirLight1.position.set(3, 5, 4);
-        scene.add(dirLight1);
-
-        const dirLight2 = new THREE.DirectionalLight(0xd4af37, 0.35);
-        dirLight2.position.set(-4, 2, -4);
-        scene.add(dirLight2);
-
-        const hoodieGroup = new THREE.Group();
-        scene.add(hoodieGroup);
-
-        // خامة القطن الثقيل للهودي
-        const fabricMaterial = new THREE.MeshStandardMaterial({
-            color: 0x18181b,
-            roughness: 0.92,
-            metalness: 0.03
-        });
-
-        function buildHoodieModel() {
-            // 1. الجذع الأساسي (Oversized Fit)
-            const torsoGeo = new THREE.CylinderGeometry(0.74, 0.78, 1.80, 36);
-            torsoGeo.scale(1.16, 1, 0.70);
-            const torso = new THREE.Mesh(torsoGeo, fabricMaterial);
-            hoodieGroup.add(torso);
-
-            // 2. حزام الخصر السفلي (Ribbed Hem)
-            const hemGeo = new THREE.CylinderGeometry(0.78, 0.75, 0.16, 36);
-            hemGeo.scale(1.16, 1, 0.70);
-            const hem = new THREE.Mesh(hemGeo, fabricMaterial);
-            hem.position.set(0, -0.96, 0);
-            hoodieGroup.add(hem);
-
-            // 3. ياقة الهودي المتداخلة (Hood Collar)
-            const neckGeo = new THREE.TorusGeometry(0.35, 0.09, 16, 32);
-            neckGeo.rotateX(Math.PI / 2.3);
-            const neck = new THREE.Mesh(neckGeo, fabricMaterial);
-            neck.position.set(0, 0.90, 0.08);
-            hoodieGroup.add(neck);
-
-            // 4. القبعة الخلفية (Hood)
-            const hoodGeo = new THREE.SphereGeometry(0.50, 28, 28, 0, Math.PI * 2, 0, Math.PI * 0.68);
-            hoodGeo.scale(1.06, 0.98, 1.18);
-            const hood = new THREE.Mesh(hoodGeo, fabricMaterial);
-            hood.position.set(0, 0.88, -0.30);
-            hood.rotation.x = -0.38;
-            hoodieGroup.add(hood);
-
-            // 5. الجيب الأمامي (Kangaroo Pocket)
-            const pocketGeo = new THREE.BoxGeometry(0.96, 0.44, 0.12);
-            const pocket = new THREE.Mesh(pocketGeo, fabricMaterial);
-            pocket.position.set(0, -0.48, 0.51);
-            hoodieGroup.add(pocket);
-
-            // 6. الأكمام الطويلة مع الأسورة (Sleeves + Cuffs)
-            const sleeveGeo = new THREE.CylinderGeometry(0.25, 0.18, 1.38, 24);
-            const cuffGeo = new THREE.CylinderGeometry(0.18, 0.15, 0.14, 24);
-
-            // الكم الأيسر
-            const leftSleeveGroup = new THREE.Group();
-            const leftSleeve = new THREE.Mesh(sleeveGeo, fabricMaterial);
-            const leftCuff = new THREE.Mesh(cuffGeo, fabricMaterial);
-            leftCuff.position.set(0, -0.75, 0);
-            leftSleeveGroup.add(leftSleeve, leftCuff);
-            leftSleeveGroup.position.set(-1.04, 0.25, 0);
-            leftSleeveGroup.rotation.z = -0.36;
-            hoodieGroup.add(leftSleeveGroup);
-
-            // الكم الأيمن
-            const rightSleeveGroup = new THREE.Group();
-            const rightSleeve = new THREE.Mesh(sleeveGeo, fabricMaterial);
-            const rightCuff = new THREE.Mesh(cuffGeo, fabricMaterial);
-            rightCuff.position.set(0, -0.75, 0);
-            rightSleeveGroup.add(rightSleeve, rightCuff);
-            rightSleeveGroup.position.set(1.04, 0.25, 0);
-            rightSleeveGroup.rotation.z = 0.36;
-            hoodieGroup.add(rightSleeveGroup);
-        }
-
-        buildHoodieModel();
-
-        // تصميم افتراضي على الهودي
-        function createDefaultTexture() {
+        // توليد شعار افتراضي واضح
+        function initDefaultLogo() {
             const c = document.createElement('canvas');
-            c.width = 512;
-            c.height = 512;
+            c.width = 400; c.height = 400;
             const ctx = c.getContext('2d');
-
             ctx.strokeStyle = '#D4AF37';
             ctx.lineWidth = 14;
-            ctx.strokeRect(24, 24, 464, 464);
-
+            ctx.strokeRect(20, 20, 360, 360);
             ctx.fillStyle = '#D4AF37';
-            ctx.font = 'bold 90px Cairo, sans-serif';
+            ctx.font = 'bold 85px Cairo, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('عِـزوة', 256, 220);
-
-            ctx.font = 'bold 34px Cairo, sans-serif';
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText('HOODIE EDITION', 256, 310);
-
-            return new THREE.CanvasTexture(c);
+            ctx.fillText('عِـزوة', 200, 175);
+            ctx.font = 'bold 30px Cairo, sans-serif';
+            ctx.fillStyle = '#888888';
+            ctx.fillText('EZWA STUDIO', 200, 255);
+            document.getElementById('print-img').src = c.toDataURL();
         }
+        initDefaultLogo();
 
-        const printMaterial = new THREE.MeshBasicMaterial({
-            map: createDefaultTexture(),
-            transparent: true,
-            side: THREE.DoubleSide
-        });
+        let currentAngle = 'front';
+        let currentSize = 'pocket';
+        let currentColorName = 'أبيض / أوف وايت';
 
-        const printGeo = new THREE.PlaneGeometry(0.25, 0.25);
-        const printMesh = new THREE.Mesh(printGeo, printMaterial);
-        hoodieGroup.add(printMesh);
-
-        // مقاسات الطباعة المخصصة للهودي (مع مراعاة مكان القبعة والجيب)
-        let currentSizeKey = 'pocket';
-        let currentColorName = 'أسود مطفي';
-        let targetRotationY = 0;
-
-        const sizeConfigs = {
-            pocket: { label: 'صدر جانبي (5×5 سم)', w: 0.22, h: 0.22, pos: [0.32, 0.38, 0.55], rot: [0, 0, 0], targetY: 0 },
-            chest_mid: { label: 'وسط الصدر (10×10 سم)', w: 0.38, h: 0.38, pos: [0, 0.32, 0.55], rot: [0, 0, 0], targetY: 0 },
-            chest_wide: { label: 'صدر عريض (25×8 سم)', w: 0.72, h: 0.24, pos: [0, 0.36, 0.55], rot: [0, 0, 0], targetY: 0 },
-            chest_full: { label: 'صدر كبير (20×20 سم)', w: 0.62, h: 0.60, pos: [0, 0.20, 0.55], rot: [0, 0, 0], targetY: 0 },
-            back_mid: { label: 'ظهر وسط أسفل القبعة (25×30 سم)', w: 0.68, h: 0.78, pos: [0, -0.08, -0.55], rot: [0, Math.PI, 0], targetY: Math.PI },
-            back_full: { label: 'ظهر كامل أسفل القبعة (30×40 سم)', w: 0.82, h: 1.00, pos: [0, -0.14, -0.55], rot: [0, Math.PI, 0], targetY: Math.PI },
-            sleeve_side: { label: 'الكم الجانبي (8×8 سم)', w: 0.23, h: 0.23, pos: [1.06, 0.44, 0.17], rot: [0, Math.PI / 2, 0.36], targetY: -Math.PI / 2 }
+        // إحداثيات المقاسات بدقة على الصورة الحقيقية
+        const sizes = {
+            pocket:     { label: 'صدر جانبي (5×5 سم)',     angle: 'front', top: '42%', left: '61%', w: 30,  h: 30 },
+            chest_mid:  { label: 'وسط الصدر (10×10 سم)',  angle: 'front', top: '43%', left: '50%', w: 54,  h: 54 },
+            chest_wide: { label: 'صدر عريض (25×8 سم)',    angle: 'front', top: '41%', left: '50%', w: 105, h: 36 },
+            chest_full: { label: 'صدر كبير (20×20 سم)',   angle: 'front', top: '45%', left: '50%', w: 92,  h: 92 },
+            back_mid:   { label: 'ظهر وسط (25×30 سم)',    angle: 'back',  top: '52%', left: '47%', w: 95,  h: 112 },
+            back_full:  { label: 'ظهر كامل (30×40 سم)',   angle: 'back',  top: '55%', left: '47%', w: 115, h: 138 },
+            sleeve:     { label: 'الكم الجانبي (8×8 سم)', angle: 'side',  top: '46%', left: '52%', w: 38,  h: 38 }
         };
 
-        function updatePrintTransform() {
-            const cfg = sizeConfigs[currentSizeKey];
-            printMesh.scale.set(cfg.w / 0.25, cfg.h / 0.25, 1);
-            printMesh.position.set(cfg.pos[0], cfg.pos[1], cfg.pos[2]);
-            printMesh.rotation.set(cfg.rot[0], cfg.rot[1], cfg.rot[2]);
-            targetRotationY = cfg.targetY;
-            document.getElementById('size-desc').innerText = cfg.label;
+        function setAngle(ang) {
+            currentAngle = ang;
+            const img = document.getElementById('hoodie-img');
+            document.querySelectorAll('.angle-btn').forEach(b => {
+                b.classList.remove('active');
+                b.classList.add('text-stone-300');
+            });
+            const activeBtn = document.getElementById('ang-' + ang);
+            activeBtn.classList.add('active');
+            activeBtn.classList.remove('text-stone-300');
+
+            // تحريك الصورة الثلاثية لعرض الزاوية المطلوبة
+            if (ang === 'front') img.style.left = '0%';
+            if (ang === 'side')  img.style.left = '-100%';
+            if (ang === 'back')  img.style.left = '-200%';
+
+            // إخفاء الطبعة إذا كانت في زاوية أخرى غير المختارة
+            const printBox = document.getElementById('print-box');
+            printBox.style.opacity = (sizes[currentSize].angle === ang) ? '1' : '0';
         }
 
-        function setPrintSize(key, btn) {
-            currentSizeKey = key;
+        function setSize(key, btn) {
+            currentSize = key;
             document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
             if (btn) btn.classList.add('active');
-            autoRotate = false;
-            document.getElementById('btn-autorotate').innerText = 'دوران: إيقاف';
-            updatePrintTransform();
+
+            const cfg = sizes[key];
+            document.getElementById('size-label').innerText = cfg.label;
+
+            // الانتقال التلقائي للزاوية الصحيحة (أمام / ظهر / كم)
+            setAngle(cfg.angle);
+
+            const printBox = document.getElementById('print-box');
+            printBox.style.top = cfg.top;
+            printBox.style.left = cfg.left;
+            printBox.style.width = cfg.w + 'px';
+            printBox.style.height = cfg.h + 'px';
+            printBox.style.opacity = '1';
         }
 
-        function setColor(hex, btn) {
-            fabricMaterial.color.set(hex);
-            currentColorName = btn.title;
+        function setColor(hex, name, isDark, btn) {
+            currentColorName = name;
+            document.getElementById('color-tint').style.backgroundColor = hex;
+            
+            const printBox = document.getElementById('print-box');
+            if (isDark) {
+                printBox.classList.add('on-dark');
+            } else {
+                printBox.classList.remove('on-dark');
+            }
+
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
             btn.classList.add('active');
         }
 
-        function rotateTo(side) {
-            autoRotate = false;
-            document.getElementById('btn-autorotate').innerText = 'دوران: إيقاف';
-            if (side === 'front') targetRotationY = 0;
-            if (side === 'back') targetRotationY = Math.PI;
-            if (side === 'sleeve') targetRotationY = -Math.PI / 2;
-        }
-
-        let autoRotate = false;
-        function toggleAutoRotate() {
-            autoRotate = !autoRotate;
-            document.getElementById('btn-autorotate').innerText = autoRotate ? 'دوران: يعمل' : 'دوران: إيقاف';
-        }
-
-        // رفع تصميم من الملفات
-        function handleImageUpload(event) {
+        function uploadDesign(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const tex = new THREE.Texture(img);
-                    tex.needsUpdate = true;
-                    printMaterial.map = tex;
-                    printMaterial.needsUpdate = true;
-                };
-                img.src = e.target.result;
+                document.getElementById('print-img').src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
 
-        function sendWhatsApp() {
-            const sLabel = sizeConfigs[currentSizeKey].label;
-            const text = `السلام عليكم، جربت مقاس الطباعة على الهودي في المحاكي 3D وأرغب باعتماد:\n- القطعة: هودي أوفر سايز\n- اللون: ${currentColorName}\n- المقاس والمكان: ${sLabel}`;
+        function orderWhatsApp() {
+            const sLabel = sizes[currentSize].label;
+            const text = `السلام عليكم، جربت مقاس الطباعة على الهودي في المحاكي وأرغب باعتماد:\n- القطعة: هودي أوفر سايز\n- اللون: ${currentColorName}\n- المقاس والمكان: ${sLabel}`;
             const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
 
-        // السحب باليد للتدوير 360 درجة
-        let isDragging = false;
-        let previousX = 0;
+        // دعم السحب بالإصبع أو الماوس للتنقل بين الأوجه الثلاثة
+        const stage = document.getElementById('stage');
+        let startX = 0;
+        const anglesOrder = ['front', 'side', 'back'];
 
-        container.addEventListener('pointerdown', (e) => {
-            isDragging = true;
-            previousX = e.clientX;
-            autoRotate = false;
-            document.getElementById('btn-autorotate').innerText = 'دوران: إيقاف';
+        stage.addEventListener('pointerdown', (e) => {
+            startX = e.clientX;
         });
 
-        window.addEventListener('pointermove', (e) => {
-            if (!isDragging) return;
-            const deltaX = e.clientX - previousX;
-            targetRotationY += deltaX * 0.012;
-            previousX = e.clientX;
-        });
-
-        window.addEventListener('pointerup', () => {
-            isDragging = false;
-        });
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        updatePrintTransform();
-        function animate() {
-            requestAnimationFrame(animate);
-            if (autoRotate) {
-                targetRotationY += 0.01;
+        stage.addEventListener('pointerup', (e) => {
+            const diff = e.clientX - startX;
+            if (Math.abs(diff) > 35) {
+                let idx = anglesOrder.indexOf(currentAngle);
+                if (diff < 0 && idx < 2) idx++;
+                else if (diff > 0 && idx > 0) idx--;
+                setAngle(anglesOrder[idx]);
             }
-            hoodieGroup.rotation.y += (targetRotationY - hoodieGroup.rotation.y) * 0.1;
-            renderer.render(scene, camera);
-        }
-        animate();
+        });
     </script>
 </body>
 </html>
