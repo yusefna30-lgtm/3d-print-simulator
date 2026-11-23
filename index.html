@@ -14,6 +14,7 @@
             margin: 0;
             overflow: hidden;
             user-select: none;
+            touch-action: none;
         }
         .glass-panel {
             background: rgba(24, 22, 21, 0.92);
@@ -40,11 +41,10 @@
             transform: scale(1.15);
         }
 
-        /* إطار العرض متطابق مع خلفية الصور السوداء وأبعادها المربعة */
         .mockup-stage {
             position: relative;
             width: min(82vw, 370px);
-            height: min(50vh, 370px);
+            height: min(49vh, 370px);
             overflow: hidden;
             border-radius: 24px;
             border: 1px solid rgba(212, 175, 55, 0.15);
@@ -56,9 +56,8 @@
             height: 100%;
             object-fit: contain;
             display: block;
-            transition: opacity 0.2s ease;
+            pointer-events: none;
         }
-        /* تلوين الهودي الأبيض مع الحفاظ على الخلفية السوداء سوداء كما هي */
         .color-overlay {
             position: absolute;
             inset: 0;
@@ -69,12 +68,18 @@
         .print-layer {
             position: absolute;
             transform: translate(-50%, -50%);
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
             mix-blend-mode: multiply;
-            pointer-events: none;
+            cursor: move;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px dashed rgba(212, 175, 55, 0.45);
+            border-radius: 4px;
+            transition: width 0.25s ease, height 0.25s ease, border-color 0.2s ease;
+        }
+        .print-layer:hover, .print-layer.dragging {
+            border: 1.5px dashed #D4AF37;
+            background-color: rgba(212, 175, 55, 0.08);
         }
         .print-layer.on-dark {
             mix-blend-mode: normal;
@@ -90,16 +95,16 @@
             <div class="w-8 h-8 rounded-lg gold-bg flex items-center justify-center font-black text-sm">عِزوة</div>
             <div>
                 <h1 class="text-xs sm:text-sm font-bold text-white leading-tight">محاكي طباعة الهودي</h1>
-                <p class="text-[10px] text-stone-400">اسحب الصورة للتقليب بين الأوجه الأربعة</p>
+                <p class="text-[10px] text-stone-400">اسحب التصميم لتحريكه بحرية</p>
             </div>
         </div>
 
-        <!-- أزرار الزوايا الأربعة -->
+        <!-- أزرار اختيار الجهة (الأمام / كم يمين / الظهر / كم يسار) -->
         <div class="glass-panel p-1 rounded-xl flex gap-1">
-            <button id="ang-front" onclick="setAngle('front')" class="angle-btn active px-2 py-1 rounded-lg text-[11px] transition">الأمام</button>
-            <button id="ang-side_right" onclick="setAngle('side_right')" class="angle-btn px-2 py-1 rounded-lg text-[11px] text-stone-300 transition">كم يمين</button>
-            <button id="ang-back" onclick="setAngle('back')" class="angle-btn px-2 py-1 rounded-lg text-[11px] text-stone-300 transition">الظهر</button>
-            <button id="ang-side_left" onclick="setAngle('side_left')" class="angle-btn px-2 py-1 rounded-lg text-[11px] text-stone-300 transition">كم يسار</button>
+            <button id="ang-front" onclick="setAngle('front')" class="angle-btn active px-2.5 py-1 rounded-lg text-[11px] transition">الأمام</button>
+            <button id="ang-side_right" onclick="setAngle('side_right')" class="angle-btn px-2.5 py-1 rounded-lg text-[11px] text-stone-300 transition">كم يمين</button>
+            <button id="ang-back" onclick="setAngle('back')" class="angle-btn px-2.5 py-1 rounded-lg text-[11px] text-stone-300 transition">الظهر</button>
+            <button id="ang-side_left" onclick="setAngle('side_left')" class="angle-btn px-2.5 py-1 rounded-lg text-[11px] text-stone-300 transition">كم يسار</button>
         </div>
     </header>
 
@@ -108,12 +113,14 @@
         <div id="stage" class="mockup-stage cursor-grab active:cursor-grabbing">
             <img id="hoodie-img" src="front.jpg.jpg" alt="هودي" class="hoodie-img">
             <div id="color-tint" class="color-overlay" style="background-color: transparent;"></div>
-            <div id="print-box" class="print-layer" style="top: 36%; left: 58%; width: 28px; height: 28px;">
-                <img id="print-img" src="" alt="التصميم" class="w-full h-full object-contain">
+            
+            <!-- التصميم القابل للتحريك الحر -->
+            <div id="print-box" class="print-layer" style="top: 36%; left: 58%; width: 28px; height: 28px;" title="اسحب لتحريك مكان التصميم">
+                <img id="print-img" src="" alt="التصميم" class="w-full h-full object-contain pointer-events-none">
             </div>
         </div>
 
-        <!-- أدوات الألوان ورفع التصميم -->
+        <!-- أدوات الألوان ورفع التصميم وتوسيطه -->
         <div class="fixed left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2">
             <div class="glass-panel p-2 rounded-xl flex flex-col items-center gap-2">
                 <span class="text-[9px] text-stone-400">اللون</span>
@@ -131,30 +138,29 @@
                 <span class="text-[9px] font-bold text-white leading-tight">ارفع<br>تصميمك</span>
                 <input type="file" accept="image/*" class="hidden" onchange="uploadDesign(event)">
             </label>
+
+            <button onclick="resetPosition()" class="glass-panel p-2 rounded-xl flex flex-col items-center justify-center hover:border-[#D4AF37] transition text-center" title="توسيط التصميم">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 gold-accent mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                <span class="text-[8px] font-bold text-stone-300">توسيط</span>
+            </button>
         </div>
     </main>
 
-    <!-- الشريط السفلي للمقاسات -->
+    <!-- الشريط السفلي الذكي للمقاسات (يتحدث تلقائياً حسب الجهة المختارة: صدر / ظهر / كم) -->
     <footer class="w-full p-2.5 z-20">
         <div class="max-w-2xl mx-auto glass-panel rounded-2xl p-3 shadow-2xl">
             <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-bold text-white">اختر مقاس ومكان الطباعة:</span>
-                <span id="size-label" class="text-[11px] gold-accent font-bold">صدر جانبي (5×5 سم)</span>
+                <span id="angle-sizes-title" class="text-xs font-bold text-white">مقاسات الأمام (من الأصغر حتى A5):</span>
+                <span id="size-label" class="text-[11px] gold-accent font-bold">شعار صدر (5×5 سم)</span>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-2.5">
-                <button onclick="setSize('pocket', this)" class="size-btn active px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">شعار صدر (5×5)</button>
-                <button onclick="setSize('chest_mid', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">وسط الصدر (10×10)</button>
-                <button onclick="setSize('chest_wide', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">صدر عريض (25×8)</button>
-                <button onclick="setSize('chest_full', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">صدر كبير (20×20)</button>
-                <button onclick="setSize('back_mid', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">ظهر وسط (25×30)</button>
-                <button onclick="setSize('back_full', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">ظهر كامل (30×40)</button>
-                <button onclick="setSize('sleeve_r', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">الكم الأيمن (8×8)</button>
-                <button onclick="setSize('sleeve_l', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">الكم الأيسر (8×8)</button>
-            </div>
+            <!-- حاوية أزرار المقاسات الديناميكية -->
+            <div id="sizes-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-2.5"></div>
 
             <button onclick="orderWhatsApp()" class="w-full py-2.5 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
-                <span>اعتماد هذا المقاس والطلب عبر واتساب</span>
+                <span>اعتماد المقاس والمكان والطلب عبر واتساب</span>
             </button>
         </div>
     </footer>
@@ -180,8 +186,9 @@
         initDefaultLogo();
 
         let currentAngle = 'front';
-        let currentSize = 'pocket';
+        let currentSizeIndex = 1;
         let currentColorName = 'أبيض';
+        let customMoved = false;
 
         const imagesMap = {
             front:      'front.jpg.jpg',
@@ -190,16 +197,80 @@
             side_left:  'side_left.jpg.jpg'
         };
 
-        const sizes = {
-            pocket:     { label: 'صدر جانبي (5×5 سم)',     angle: 'front',      top: '36%', left: '58%', w: 28,  h: 28 },
-            chest_mid:  { label: 'وسط الصدر (10×10 سم)',  angle: 'front',      top: '38%', left: '49%', w: 50,  h: 50 },
-            chest_wide: { label: 'صدر عريض (25×8 سم)',    angle: 'front',      top: '36%', left: '49%', w: 96,  h: 32 },
-            chest_full: { label: 'صدر كبير (20×20 سم)',   angle: 'front',      top: '40%', left: '49%', w: 84,  h: 84 },
-            back_mid:   { label: 'ظهر وسط (25×30 سم)',    angle: 'back',       top: '48%', left: '49%', w: 88,  h: 105 },
-            back_full:  { label: 'ظهر كامل (30×40 سم)',   angle: 'back',       top: '51%', left: '49%', w: 105, h: 128 },
-            sleeve_r:   { label: 'الكم الأيمن (8×8 سم)',  angle: 'side_right', top: '44%', left: '44%', w: 34,  h: 34 },
-            sleeve_l:   { label: 'الكم الأيسر (8×8 سم)', angle: 'side_left',  top: '44%', left: '53%', w: 34,  h: 34 }
+        const angleNames = {
+            front:      'الأمام (الصدر)',
+            side_right: 'الكم الأيمن',
+            back:       'الخلف (الظهر)',
+            side_left:  'الكم الأيسر'
         };
+
+        // مقاسات مخصصة ومتدرجة لكل جهة على حدة (من الأصغر وحتى A5)
+        const angleSizes = {
+            front: [
+                { short: 'مصغّر (3×3 سم)',      label: 'صدر مصغّر (3×3 سم)',       top: '35%', left: '58%', w: 18, h: 18 },
+                { short: 'شعار (5×5 سم)',       label: 'شعار صدر (5×5 سم)',        top: '36%', left: '58%', w: 28, h: 28 },
+                { short: 'متوسط (7×7 سم)',      label: 'صدر متوسط (7×7 سم)',       top: '37%', left: '57%', w: 38, h: 38 },
+                { short: 'وسط الصدر (10×10)',   label: 'وسط الصدر (10×10 سم)',     top: '38%', left: '49%', w: 50, h: 50 },
+                { short: 'صدر بارز (12×12)',    label: 'صدر بارز (12×12 سم)',      top: '39%', left: '49%', w: 60, h: 60 },
+                { short: 'عريض (20×7 سم)',      label: 'صدر عريض (20×7 سم)',       top: '36%', left: '49%', w: 86, h: 30 },
+                { short: 'A6 (10.5×14.8)',      label: 'مقاس A6 صدر (10.5×14.8)',  top: '40%', left: '49%', w: 52, h: 74 },
+                { short: 'A5 (14.8×21 سم)',     label: 'مقاس A5 صدر (14.8×21 سم)', top: '41%', left: '49%', w: 72, h: 102 }
+            ],
+            back: [
+                { short: 'أسفل الياقة (5×5)',   label: 'ظهر أسفل الياقة (5×5 سم)',  top: '33%', left: '49%', w: 28, h: 28 },
+                { short: 'شعار ظهر (8×8 سم)',   label: 'شعار ظهر علوي (8×8 سم)',    top: '36%', left: '49%', w: 42, h: 42 },
+                { short: 'وسط (10×10 سم)',      label: 'وسط الظهر (10×10 سم)',      top: '42%', left: '49%', w: 52, h: 52 },
+                { short: 'مربع (12×12 سم)',     label: 'ظهر مربع (12×12 سم)',       top: '44%', left: '49%', w: 62, h: 62 },
+                { short: 'عريض (22×8 سم)',      label: 'ظهر عريض (22×8 سم)',        top: '40%', left: '49%', w: 94, h: 34 },
+                { short: 'A6 (10.5×14.8)',      label: 'مقاس A6 ظهر (10.5×14.8)',   top: '45%', left: '49%', w: 54, h: 76 },
+                { short: 'A5 (14.8×21 سم)',     label: 'مقاس A5 ظهر (14.8×21 سم)',  top: '47%', left: '49%', w: 74, h: 104 }
+            ],
+            side_right: [
+                { short: 'مصغّر (4×4 سم)',      label: 'كم أيمن مصغّر (4×4 سم)',    top: '42%', left: '44%', w: 22, h: 22 },
+                { short: 'شعار كم (6×6 سم)',    label: 'شعار كم أيمن (6×6 سم)',     top: '43%', left: '44%', w: 30, h: 30 },
+                { short: 'قياسي (8×8 سم)',      label: 'كم أيمن قياسي (8×8 سم)',    top: '44%', left: '44%', w: 38, h: 38 },
+                { short: 'طولي (6×15 سم)',      label: 'كم أيمن طولي (6×15 سم)',    top: '48%', left: '44%', w: 28, h: 72 }
+            ],
+            side_left: [
+                { short: 'مصغّر (4×4 سم)',      label: 'كم أيسر مصغّر (4×4 سم)',    top: '42%', left: '53%', w: 22, h: 22 },
+                { short: 'شعار كم (6×6 سم)',    label: 'شعار كم أيسر (6×6 سم)',     top: '43%', left: '53%', w: 30, h: 30 },
+                { short: 'قياسي (8×8 سم)',      label: 'كم أيسر قياسي (8×8 سم)',    top: '44%', left: '53%', w: 38, h: 38 },
+                { short: 'طولي (6×15 سم)',      label: 'كم أيسر طولي (6×15 سم)',    top: '48%', left: '53%', w: 28, h: 72 }
+            ]
+        };
+
+        function renderSizesButtons() {
+            const grid = document.getElementById('sizes-grid');
+            const list = angleSizes[currentAngle];
+            document.getElementById('angle-sizes-title').innerText = `مقاسات ${angleNames[currentAngle]} (من الأصغر حتى A5):`;
+
+            grid.innerHTML = '';
+            list.forEach((item, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `size-btn ${idx === currentSizeIndex ? 'active' : ''} px-2 py-1.5 rounded-xl border border-stone-700 text-[10px] sm:text-[11px] transition`;
+                btn.innerText = item.short;
+                btn.onclick = () => selectSize(idx);
+                grid.appendChild(btn);
+            });
+        }
+
+        function selectSize(idx) {
+            currentSizeIndex = idx;
+            customMoved = false;
+            const list = angleSizes[currentAngle];
+            const cfg = list[idx];
+
+            document.querySelectorAll('.size-btn').forEach((b, i) => {
+                b.classList.toggle('active', i === idx);
+            });
+
+            document.getElementById('size-label').innerText = cfg.label;
+            const printBox = document.getElementById('print-box');
+            printBox.style.top = cfg.top;
+            printBox.style.left = cfg.left;
+            printBox.style.width = cfg.w + 'px';
+            printBox.style.height = cfg.h + 'px';
+        }
 
         function setAngle(ang) {
             currentAngle = ang;
@@ -216,26 +287,16 @@
                 activeBtn.classList.remove('text-stone-300');
             }
 
-            const printBox = document.getElementById('print-box');
-            printBox.style.opacity = (sizes[currentSize].angle === ang) ? '1' : '0';
+            // اختيار مقاس افتراضي مناسب للجهة عند التبديل
+            currentSizeIndex = (ang === 'back') ? 4 : (ang === 'front') ? 1 : 2;
+            if (currentSizeIndex >= angleSizes[ang].length) currentSizeIndex = 0;
+
+            renderSizesButtons();
+            selectSize(currentSizeIndex);
         }
 
-        function setSize(key, btn) {
-            currentSize = key;
-            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-            if (btn) btn.classList.add('active');
-
-            const cfg = sizes[key];
-            document.getElementById('size-label').innerText = cfg.label;
-
-            setAngle(cfg.angle);
-
-            const printBox = document.getElementById('print-box');
-            printBox.style.top = cfg.top;
-            printBox.style.left = cfg.left;
-            printBox.style.width = cfg.w + 'px';
-            printBox.style.height = cfg.h + 'px';
-            printBox.style.opacity = '1';
+        function resetPosition() {
+            selectSize(currentSizeIndex);
         }
 
         function setColor(hex, name, isDark, btn) {
@@ -264,28 +325,66 @@
         }
 
         function orderWhatsApp() {
-            const sLabel = sizes[currentSize].label;
-            const text = `السلام عليكم، جربت مقاس الطباعة على الهودي في المحاكي وأرغب باعتماد:\n- القطعة: هودي أوفر سايز\n- اللون: ${currentColorName}\n- المقاس والمكان: ${sLabel}`;
+            const cfg = angleSizes[currentAngle][currentSizeIndex];
+            const faceName = angleNames[currentAngle];
+            const posNote = customMoved ? ' (تم تحديد الموضع يدوياً على الهودي)' : '';
+            const text = `السلام عليكم، جربت مقاس الطباعة على الهودي في المحاكي وأرغب باعتماد:\n- القطعة: هودي أوفر سايز\n- اللون: ${currentColorName}\n- الجهة: ${faceName}${posNote}\n- المقاس: ${cfg.label}`;
             const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
 
-        // السحب باللمس أو الماوس للدوران الكامل 360 بين الأوجه الأربعة
+        // تشغيل الواجهة الافتراضية
+        setAngle('front');
+
+        // --- تحريك التصميم الحر + تقليب الهودي ---
         const stage = document.getElementById('stage');
+        const printBox = document.getElementById('print-box');
+        let isDraggingPrint = false;
+        let isSwipingStage = false;
         let startX = 0;
         const anglesOrder = ['front', 'side_right', 'back', 'side_left'];
 
+        printBox.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            isDraggingPrint = true;
+            printBox.classList.add('dragging');
+        });
+
         stage.addEventListener('pointerdown', (e) => {
+            if (isDraggingPrint) return;
+            isSwipingStage = true;
             startX = e.clientX;
         });
 
-        stage.addEventListener('pointerup', (e) => {
-            const diff = e.clientX - startX;
-            if (Math.abs(diff) > 30) {
-                let idx = anglesOrder.indexOf(currentAngle);
-                if (diff < 0) idx = (idx + 1) % 4;
-                else idx = (idx - 1 + 4) % 4;
-                setAngle(anglesOrder[idx]);
+        window.addEventListener('pointermove', (e) => {
+            if (isDraggingPrint) {
+                const rect = stage.getBoundingClientRect();
+                let xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+                let yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+
+                xPercent = Math.max(15, Math.min(85, xPercent));
+                yPercent = Math.max(15, Math.min(85, yPercent));
+
+                printBox.style.left = xPercent + '%';
+                printBox.style.top = yPercent + '%';
+                customMoved = true;
+            }
+        });
+
+        window.addEventListener('pointerup', (e) => {
+            if (isDraggingPrint) {
+                isDraggingPrint = false;
+                printBox.classList.remove('dragging');
+            }
+            if (isSwipingStage) {
+                isSwipingStage = false;
+                const diff = e.clientX - startX;
+                if (Math.abs(diff) > 35) {
+                    let idx = anglesOrder.indexOf(currentAngle);
+                    if (diff < 0) idx = (idx + 1) % 4;
+                    else idx = (idx - 1 + 4) % 4;
+                    setAngle(anglesOrder[idx]);
+                }
             }
         });
     </script>
