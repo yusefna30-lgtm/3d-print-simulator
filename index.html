@@ -16,7 +16,7 @@
             user-select: none;
         }
         .glass-panel {
-            background: rgba(24, 22, 21, 0.90);
+            background: rgba(24, 22, 21, 0.92);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(212, 175, 55, 0.25);
@@ -39,27 +39,25 @@
             outline-offset: 2px;
             transform: scale(1.15);
         }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* حاوية عرض الهودي بالكامل بنسبة مطابقة للصورة الأصلية (ثلث العرض × الارتفاع الكامل) */
+        /* حاوية عرض الهودي متوازنة الأبعاد لإظهار الهودي كاملاً من القبعة للخصر */
         .mockup-stage {
             position: relative;
-            width: min(74vw, 310px);
-            height: min(58vh, 465px);
+            width: min(82vw, 370px);
+            height: min(50vh, 370px);
             overflow: hidden;
             border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
-            background-color: #b4b4b4;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            background-color: #b5b5b5;
         }
-        /* صورة الهودي الثلاثية كاملة الارتفاع بدون قص الأطراف */
+        /* الصورة الثلاثية بعرض 300% وارتفاع 100% متطابق مع الإطار */
         .hoodie-sprite {
             position: absolute;
             top: 0;
             width: 300%;
             height: 100%;
             max-width: none;
-            object-fit: fill;
+            object-fit: cover;
             transition: left 0.45s cubic-bezier(0.25, 1, 0.5, 1);
         }
         /* طبقة التلوين الواقعي للقماش */
@@ -117,7 +115,7 @@
             <div id="color-tint" class="color-overlay" style="background-color: transparent;"></div>
 
             <!-- طبقة الطباعة -->
-            <div id="print-box" class="print-layer" style="top: 41%; left: 62%; width: 28px; height: 28px;">
+            <div id="print-box" class="print-layer" style="top: 43%; left: 60%; width: 28px; height: 28px;">
                 <img id="print-img" src="" alt="التصميم" class="w-full h-full object-contain">
             </div>
         </div>
@@ -143,25 +141,26 @@
         </div>
     </main>
 
-    <!-- الشريط السفلي للمقاسات -->
-    <footer class="w-full p-3 z-20">
-        <div class="max-w-xl mx-auto glass-panel rounded-2xl p-3 shadow-2xl">
+    <!-- الشريط السفلي للمقاسات (شبكة واضحة تعرض الصدر والظهر والكم معاً) -->
+    <footer class="w-full p-2.5 z-20">
+        <div class="max-w-2xl mx-auto glass-panel rounded-2xl p-3 shadow-2xl">
             <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-bold text-white">اختر مقاس الطباعة:</span>
+                <span class="text-xs font-bold text-white">اختر مقاس ومكان الطباعة:</span>
                 <span id="size-label" class="text-[11px] gold-accent font-bold">صدر جانبي (5×5 سم)</span>
             </div>
 
-            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                <button onclick="setSize('pocket', this)" class="size-btn active shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">شعار صدر (5×5 سم)</button>
-                <button onclick="setSize('chest_mid', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">وسط الصدر (10×10 سم)</button>
-                <button onclick="setSize('chest_wide', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">صدر عريض (25×8 سم)</button>
-                <button onclick="setSize('chest_full', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">صدر كبير (20×20 سم)</button>
-                <button onclick="setSize('back_mid', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">ظهر وسط (25×30 سم)</button>
-                <button onclick="setSize('back_full', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">ظهر كامل (30×40 سم)</button>
-                <button onclick="setSize('sleeve', this)" class="size-btn shrink-0 px-3 py-1.5 rounded-xl border border-stone-700 text-xs transition">الكم (8×8 سم)</button>
+            <!-- شبكة من 4 أعمدة تعرض جميع المقاسات بدون إخفاء -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-2.5">
+                <button onclick="setSize('pocket', this)" class="size-btn active px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">شعار صدر (5×5)</button>
+                <button onclick="setSize('chest_mid', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">وسط الصدر (10×10)</button>
+                <button onclick="setSize('chest_wide', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">صدر عريض (25×8)</button>
+                <button onclick="setSize('chest_full', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">صدر كبير (20×20)</button>
+                <button onclick="setSize('back_mid', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">ظهر وسط (25×30)</button>
+                <button onclick="setSize('back_full', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">ظهر كامل (30×40)</button>
+                <button onclick="setSize('sleeve', this)" class="size-btn col-span-2 px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">الكم الجانبي (8×8 سم)</button>
             </div>
 
-            <button onclick="orderWhatsApp()" class="w-full mt-1 py-2.5 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
+            <button onclick="orderWhatsApp()" class="w-full py-2.5 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
                 <span>اعتماد هذا المقاس والطلب عبر واتساب</span>
             </button>
         </div>
@@ -191,15 +190,15 @@
         let currentSize = 'pocket';
         let currentColorName = 'أبيض / أوف وايت';
 
-        // إحداثيات المقاسات مضبوطة بدقة على الهودي الكامل
+        // إحداثيات المقاسات مضبوطة بدقة على منتصف كل وجه
         const sizes = {
-            pocket:     { label: 'صدر جانبي (5×5 سم)',     angle: 'front', top: '41%', left: '62%', w: 26,  h: 26 },
-            chest_mid:  { label: 'وسط الصدر (10×10 سم)',  angle: 'front', top: '42%', left: '51%', w: 48,  h: 48 },
-            chest_wide: { label: 'صدر عريض (25×8 سم)',    angle: 'front', top: '40%', left: '51%', w: 92,  h: 32 },
-            chest_full: { label: 'صدر كبير (20×20 سم)',   angle: 'front', top: '43%', left: '51%', w: 80,  h: 80 },
-            back_mid:   { label: 'ظهر وسط (25×30 سم)',    angle: 'back',  top: '50%', left: '47%', w: 84,  h: 100 },
-            back_full:  { label: 'ظهر كامل (30×40 سم)',   angle: 'back',  top: '53%', left: '47%', w: 102, h: 124 },
-            sleeve:     { label: 'الكم الجانبي (8×8 سم)', angle: 'side',  top: '46%', left: '53%', w: 34,  h: 34 }
+            pocket:     { label: 'صدر جانبي (5×5 سم)',     angle: 'front', top: '43%', left: '60%', w: 28,  h: 28 },
+            chest_mid:  { label: 'وسط الصدر (10×10 سم)',  angle: 'front', top: '44%', left: '50%', w: 52,  h: 52 },
+            chest_wide: { label: 'صدر عريض (25×8 سم)',    angle: 'front', top: '42%', left: '50%', w: 98,  h: 34 },
+            chest_full: { label: 'صدر كبير (20×20 سم)',   angle: 'front', top: '45%', left: '50%', w: 86,  h: 86 },
+            back_mid:   { label: 'ظهر وسط (25×30 سم)',    angle: 'back',  top: '51%', left: '47%', w: 88,  h: 104 },
+            back_full:  { label: 'ظهر كامل (30×40 سم)',   angle: 'back',  top: '54%', left: '47%', w: 108, h: 128 },
+            sleeve:     { label: 'الكم الجانبي (8×8 سم)', angle: 'side',  top: '47%', left: '52%', w: 36,  h: 36 }
         };
 
         function setAngle(ang) {
@@ -213,10 +212,10 @@
             activeBtn.classList.add('active');
             activeBtn.classList.remove('text-stone-300');
 
-            // إزاحة دقيقة لإظهار كل وجه كاملاً في منتصف الإطار
-            if (ang === 'front') img.style.left = '8%';
+            // محاذاة دقيقة لكل ثلث بدون أي فراغات جانبية
+            if (ang === 'front') img.style.left = '0%';
             if (ang === 'side')  img.style.left = '-100%';
-            if (ang === 'back')  img.style.left = '-206%';
+            if (ang === 'back')  img.style.left = '-200%';
 
             const printBox = document.getElementById('print-box');
             printBox.style.opacity = (sizes[currentSize].angle === ang) ? '1' : '0';
@@ -271,9 +270,6 @@
             const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
-
-        // ضبط الوضع الافتراضي عند الفتح
-        setAngle('front');
 
         // دعم السحب بالإصبع أو الماوس للتنقل بين الأوجه الثلاثة
         const stage = document.getElementById('stage');
