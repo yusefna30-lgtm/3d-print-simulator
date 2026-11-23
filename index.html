@@ -9,7 +9,7 @@
     <style>
         body {
             font-family: 'Cairo', sans-serif;
-            background-color: #121212;
+            background-color: #0d0d0d;
             color: #f5f5f4;
             margin: 0;
             overflow: hidden;
@@ -40,25 +40,25 @@
             transform: scale(1.15);
         }
 
-        /* إطار العرض متطابق مع نسبة عرض وارتفاع الهودي بالكامل */
+        /* إطار العرض متطابق مع خلفية الصور السوداء وأبعادها المربعة */
         .mockup-stage {
             position: relative;
-            width: min(76vw, 310px);
-            height: min(56vh, 450px);
+            width: min(82vw, 370px);
+            height: min(50vh, 370px);
             overflow: hidden;
             border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
-            background-color: #b4b4b4;
-            direction: ltr;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
+            background-color: #000000;
         }
-        .hoodie-sprite {
-            position: absolute;
-            top: 0;
-            width: 280%;
+        .hoodie-img {
+            width: 100%;
             height: 100%;
-            max-width: none;
-            transition: left 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+            object-fit: contain;
+            display: block;
+            transition: opacity 0.2s ease;
         }
+        /* تلوين الهودي الأبيض مع الحفاظ على الخلفية السوداء سوداء كما هي */
         .color-overlay {
             position: absolute;
             inset: 0;
@@ -69,7 +69,7 @@
         .print-layer {
             position: absolute;
             transform: translate(-50%, -50%);
-            transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
             mix-blend-mode: multiply;
             pointer-events: none;
             display: flex;
@@ -90,23 +90,25 @@
             <div class="w-8 h-8 rounded-lg gold-bg flex items-center justify-center font-black text-sm">عِزوة</div>
             <div>
                 <h1 class="text-xs sm:text-sm font-bold text-white leading-tight">محاكي طباعة الهودي</h1>
-                <p class="text-[10px] text-stone-400">اسحب الصورة يميناً أو يساراً للتقليب</p>
+                <p class="text-[10px] text-stone-400">اسحب الصورة للتقليب بين الأوجه الأربعة</p>
             </div>
         </div>
 
+        <!-- أزرار الزوايا الأربعة -->
         <div class="glass-panel p-1 rounded-xl flex gap-1">
-            <button id="ang-front" onclick="setAngle('front')" class="angle-btn active px-2.5 py-1 rounded-lg text-xs transition">الأمام</button>
-            <button id="ang-side" onclick="setAngle('side')" class="angle-btn px-2.5 py-1 rounded-lg text-xs text-stone-300 transition">الكم</button>
-            <button id="ang-back" onclick="setAngle('back')" class="angle-btn px-2.5 py-1 rounded-lg text-xs text-stone-300 transition">الظهر</button>
+            <button id="ang-front" onclick="setAngle('front')" class="angle-btn active px-2 py-1 rounded-lg text-[11px] transition">الأمام</button>
+            <button id="ang-side_right" onclick="setAngle('side_right')" class="angle-btn px-2 py-1 rounded-lg text-[11px] text-stone-300 transition">كم يمين</button>
+            <button id="ang-back" onclick="setAngle('back')" class="angle-btn px-2 py-1 rounded-lg text-[11px] text-stone-300 transition">الظهر</button>
+            <button id="ang-side_left" onclick="setAngle('side_left')" class="angle-btn px-2 py-1 rounded-lg text-[11px] text-stone-300 transition">كم يسار</button>
         </div>
     </header>
 
     <!-- منطقة العرض الوسطى -->
     <main class="flex-1 flex items-center justify-center w-full relative z-10 px-4">
         <div id="stage" class="mockup-stage cursor-grab active:cursor-grabbing">
-            <img id="hoodie-img" src="hoodie.jpg.jpg" alt="هودي" class="hoodie-sprite" style="left: -6%;">
+            <img id="hoodie-img" src="front.jpg.jpg" alt="هودي" class="hoodie-img">
             <div id="color-tint" class="color-overlay" style="background-color: transparent;"></div>
-            <div id="print-box" class="print-layer" style="top: 43%; left: 58%; width: 24px; height: 24px;">
+            <div id="print-box" class="print-layer" style="top: 36%; left: 58%; width: 28px; height: 28px;">
                 <img id="print-img" src="" alt="التصميم" class="w-full h-full object-contain">
             </div>
         </div>
@@ -115,7 +117,7 @@
         <div class="fixed left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2">
             <div class="glass-panel p-2 rounded-xl flex flex-col items-center gap-2">
                 <span class="text-[9px] text-stone-400">اللون</span>
-                <button onclick="setColor('transparent', 'أبيض / أوف وايت', false, this)" class="color-dot active w-6 h-6 rounded-full bg-[#e5e5e5] border border-stone-500 transition" title="أبيض"></button>
+                <button onclick="setColor('transparent', 'أبيض', false, this)" class="color-dot active w-6 h-6 rounded-full bg-[#ffffff] border border-stone-500 transition" title="أبيض"></button>
                 <button onclick="setColor('#262629', 'أسود مطفي', true, this)" class="color-dot w-6 h-6 rounded-full bg-[#18181b] border border-stone-500 transition" title="أسود"></button>
                 <button onclick="setColor('#5e192c', 'عنابي داكن', true, this)" class="color-dot w-6 h-6 rounded-full bg-[#4a1525] border border-stone-500 transition" title="عنابي"></button>
                 <button onclick="setColor('#d8cab3', 'بيج رملي', false, this)" class="color-dot w-6 h-6 rounded-full bg-[#d6cbb8] border border-stone-500 transition" title="بيج"></button>
@@ -147,7 +149,8 @@
                 <button onclick="setSize('chest_full', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">صدر كبير (20×20)</button>
                 <button onclick="setSize('back_mid', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">ظهر وسط (25×30)</button>
                 <button onclick="setSize('back_full', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">ظهر كامل (30×40)</button>
-                <button onclick="setSize('sleeve', this)" class="size-btn col-span-2 px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">الكم الجانبي (8×8 سم)</button>
+                <button onclick="setSize('sleeve_r', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">الكم الأيمن (8×8)</button>
+                <button onclick="setSize('sleeve_l', this)" class="size-btn px-2 py-1.5 rounded-xl border border-stone-700 text-[11px] transition">الكم الأيسر (8×8)</button>
             </div>
 
             <button onclick="orderWhatsApp()" class="w-full py-2.5 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
@@ -170,7 +173,7 @@
             ctx.textBaseline = 'middle';
             ctx.fillText('عِـزوة', 200, 175);
             ctx.font = 'bold 30px Cairo, sans-serif';
-            ctx.fillStyle = '#888888';
+            ctx.fillStyle = '#666666';
             ctx.fillText('EZWA STUDIO', 200, 255);
             document.getElementById('print-img').src = c.toDataURL();
         }
@@ -178,33 +181,40 @@
 
         let currentAngle = 'front';
         let currentSize = 'pocket';
-        let currentColorName = 'أبيض / أوف وايت';
+        let currentColorName = 'أبيض';
+
+        const imagesMap = {
+            front:      'front.jpg.jpg',
+            side_right: 'side_right.jpg.jpg',
+            back:       'back.jpg.jpg',
+            side_left:  'side_left.jpg.jpg'
+        };
 
         const sizes = {
-            pocket:     { label: 'صدر جانبي (5×5 سم)',     angle: 'front', top: '43%', left: '58%', w: 24, h: 24 },
-            chest_mid:  { label: 'وسط الصدر (10×10 سم)',  angle: 'front', top: '44%', left: '49%', w: 44, h: 44 },
-            chest_wide: { label: 'صدر عريض (25×8 سم)',    angle: 'front', top: '42%', left: '49%', w: 84, h: 28 },
-            chest_full: { label: 'صدر كبير (20×20 سم)',   angle: 'front', top: '45%', left: '49%', w: 74, h: 74 },
-            back_mid:   { label: 'ظهر وسط (25×30 سم)',    angle: 'back',  top: '50%', left: '48%', w: 76, h: 90 },
-            back_full:  { label: 'ظهر كامل (30×40 سم)',   angle: 'back',  top: '53%', left: '48%', w: 92, h: 108 },
-            sleeve:     { label: 'الكم الجانبي (8×8 سم)', angle: 'side',  top: '46%', left: '53%', w: 32, h: 32 }
+            pocket:     { label: 'صدر جانبي (5×5 سم)',     angle: 'front',      top: '36%', left: '58%', w: 28,  h: 28 },
+            chest_mid:  { label: 'وسط الصدر (10×10 سم)',  angle: 'front',      top: '38%', left: '49%', w: 50,  h: 50 },
+            chest_wide: { label: 'صدر عريض (25×8 سم)',    angle: 'front',      top: '36%', left: '49%', w: 96,  h: 32 },
+            chest_full: { label: 'صدر كبير (20×20 سم)',   angle: 'front',      top: '40%', left: '49%', w: 84,  h: 84 },
+            back_mid:   { label: 'ظهر وسط (25×30 سم)',    angle: 'back',       top: '48%', left: '49%', w: 88,  h: 105 },
+            back_full:  { label: 'ظهر كامل (30×40 سم)',   angle: 'back',       top: '51%', left: '49%', w: 105, h: 128 },
+            sleeve_r:   { label: 'الكم الأيمن (8×8 سم)',  angle: 'side_right', top: '44%', left: '44%', w: 34,  h: 34 },
+            sleeve_l:   { label: 'الكم الأيسر (8×8 سم)', angle: 'side_left',  top: '44%', left: '53%', w: 34,  h: 34 }
         };
 
         function setAngle(ang) {
             currentAngle = ang;
             const img = document.getElementById('hoodie-img');
+            img.src = imagesMap[ang];
+
             document.querySelectorAll('.angle-btn').forEach(b => {
                 b.classList.remove('active');
                 b.classList.add('text-stone-300');
             });
             const activeBtn = document.getElementById('ang-' + ang);
-            activeBtn.classList.add('active');
-            activeBtn.classList.remove('text-stone-300');
-
-            // توسيط كل وجه بالكامل داخل الإطار بدون أي فراغ جانبي
-            if (ang === 'front') img.style.left = '-6%';
-            if (ang === 'side')  img.style.left = '-95%';
-            if (ang === 'back')  img.style.left = '-176%';
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.classList.remove('text-stone-300');
+            }
 
             const printBox = document.getElementById('print-box');
             printBox.style.opacity = (sizes[currentSize].angle === ang) ? '1' : '0';
@@ -260,11 +270,10 @@
             window.open(url, '_blank');
         }
 
-        setAngle('front');
-
+        // السحب باللمس أو الماوس للدوران الكامل 360 بين الأوجه الأربعة
         const stage = document.getElementById('stage');
         let startX = 0;
-        const anglesOrder = ['front', 'side', 'back'];
+        const anglesOrder = ['front', 'side_right', 'back', 'side_left'];
 
         stage.addEventListener('pointerdown', (e) => {
             startX = e.clientX;
@@ -272,10 +281,10 @@
 
         stage.addEventListener('pointerup', (e) => {
             const diff = e.clientX - startX;
-            if (Math.abs(diff) > 35) {
+            if (Math.abs(diff) > 30) {
                 let idx = anglesOrder.indexOf(currentAngle);
-                if (diff < 0 && idx < 2) idx++;
-                else if (diff > 0 && idx > 0) idx--;
+                if (diff < 0) idx = (idx + 1) % 4;
+                else idx = (idx - 1 + 4) % 4;
                 setAngle(anglesOrder[idx]);
             }
         });
