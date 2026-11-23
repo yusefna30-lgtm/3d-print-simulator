@@ -42,25 +42,25 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* حاوية عرض الهودي الحقيقي */
+        /* حاوية عرض الهودي بالكامل بنسبة مطابقة للصورة الأصلية (ثلث العرض × الارتفاع الكامل) */
         .mockup-stage {
             position: relative;
-            width: 340px;
-            height: 360px;
+            width: min(74vw, 310px);
+            height: min(58vh, 465px);
             overflow: hidden;
             border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-            background-color: #b8b8b8;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+            background-color: #b4b4b4;
         }
-        /* صورة الهودي الثلاثية مقصوصة لعرض زاوية واحدة بوضوح */
+        /* صورة الهودي الثلاثية كاملة الارتفاع بدون قص الأطراف */
         .hoodie-sprite {
             position: absolute;
             top: 0;
             width: 300%;
             height: 100%;
             max-width: none;
-            object-fit: cover;
-            transition: left 0.45s cubic-bezier(0.25, 1, 0.5, 1), filter 0.3s ease;
+            object-fit: fill;
+            transition: left 0.45s cubic-bezier(0.25, 1, 0.5, 1);
         }
         /* طبقة التلوين الواقعي للقماش */
         .color-overlay {
@@ -83,7 +83,7 @@
         }
         .print-layer.on-dark {
             mix-blend-mode: normal;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45));
         }
     </style>
 </head>
@@ -107,7 +107,7 @@
         </div>
     </header>
 
-    <!-- منطقة العرض الوسطى (الهودي الحقيقي) -->
+    <!-- منطقة العرض الوسطى (الهودي الكامل) -->
     <main class="flex-1 flex items-center justify-center w-full relative z-10 px-4">
         <div id="stage" class="mockup-stage cursor-grab active:cursor-grabbing">
             <!-- الصورة الحقيقية المرفوعة -->
@@ -117,7 +117,7 @@
             <div id="color-tint" class="color-overlay" style="background-color: transparent;"></div>
 
             <!-- طبقة الطباعة -->
-            <div id="print-box" class="print-layer" style="top: 42%; left: 61%; width: 30px; height: 30px;">
+            <div id="print-box" class="print-layer" style="top: 41%; left: 62%; width: 28px; height: 28px;">
                 <img id="print-img" src="" alt="التصميم" class="w-full h-full object-contain">
             </div>
         </div>
@@ -168,7 +168,6 @@
     </footer>
 
     <script>
-        // توليد شعار افتراضي واضح
         function initDefaultLogo() {
             const c = document.createElement('canvas');
             c.width = 400; c.height = 400;
@@ -192,15 +191,15 @@
         let currentSize = 'pocket';
         let currentColorName = 'أبيض / أوف وايت';
 
-        // إحداثيات المقاسات بدقة على الصورة الحقيقية
+        // إحداثيات المقاسات مضبوطة بدقة على الهودي الكامل
         const sizes = {
-            pocket:     { label: 'صدر جانبي (5×5 سم)',     angle: 'front', top: '42%', left: '61%', w: 30,  h: 30 },
-            chest_mid:  { label: 'وسط الصدر (10×10 سم)',  angle: 'front', top: '43%', left: '50%', w: 54,  h: 54 },
-            chest_wide: { label: 'صدر عريض (25×8 سم)',    angle: 'front', top: '41%', left: '50%', w: 105, h: 36 },
-            chest_full: { label: 'صدر كبير (20×20 سم)',   angle: 'front', top: '45%', left: '50%', w: 92,  h: 92 },
-            back_mid:   { label: 'ظهر وسط (25×30 سم)',    angle: 'back',  top: '52%', left: '47%', w: 95,  h: 112 },
-            back_full:  { label: 'ظهر كامل (30×40 سم)',   angle: 'back',  top: '55%', left: '47%', w: 115, h: 138 },
-            sleeve:     { label: 'الكم الجانبي (8×8 سم)', angle: 'side',  top: '46%', left: '52%', w: 38,  h: 38 }
+            pocket:     { label: 'صدر جانبي (5×5 سم)',     angle: 'front', top: '41%', left: '62%', w: 26,  h: 26 },
+            chest_mid:  { label: 'وسط الصدر (10×10 سم)',  angle: 'front', top: '42%', left: '51%', w: 48,  h: 48 },
+            chest_wide: { label: 'صدر عريض (25×8 سم)',    angle: 'front', top: '40%', left: '51%', w: 92,  h: 32 },
+            chest_full: { label: 'صدر كبير (20×20 سم)',   angle: 'front', top: '43%', left: '51%', w: 80,  h: 80 },
+            back_mid:   { label: 'ظهر وسط (25×30 سم)',    angle: 'back',  top: '50%', left: '47%', w: 84,  h: 100 },
+            back_full:  { label: 'ظهر كامل (30×40 سم)',   angle: 'back',  top: '53%', left: '47%', w: 102, h: 124 },
+            sleeve:     { label: 'الكم الجانبي (8×8 سم)', angle: 'side',  top: '46%', left: '53%', w: 34,  h: 34 }
         };
 
         function setAngle(ang) {
@@ -214,12 +213,11 @@
             activeBtn.classList.add('active');
             activeBtn.classList.remove('text-stone-300');
 
-            // تحريك الصورة الثلاثية لعرض الزاوية المطلوبة
-            if (ang === 'front') img.style.left = '0%';
+            // إزاحة دقيقة لإظهار كل وجه كاملاً في منتصف الإطار
+            if (ang === 'front') img.style.left = '8%';
             if (ang === 'side')  img.style.left = '-100%';
-            if (ang === 'back')  img.style.left = '-200%';
+            if (ang === 'back')  img.style.left = '-206%';
 
-            // إخفاء الطبعة إذا كانت في زاوية أخرى غير المختارة
             const printBox = document.getElementById('print-box');
             printBox.style.opacity = (sizes[currentSize].angle === ang) ? '1' : '0';
         }
@@ -232,7 +230,6 @@
             const cfg = sizes[key];
             document.getElementById('size-label').innerText = cfg.label;
 
-            // الانتقال التلقائي للزاوية الصحيحة (أمام / ظهر / كم)
             setAngle(cfg.angle);
 
             const printBox = document.getElementById('print-box');
@@ -274,6 +271,9 @@
             const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
+
+        // ضبط الوضع الافتراضي عند الفتح
+        setAngle('front');
 
         // دعم السحب بالإصبع أو الماوس للتنقل بين الأوجه الثلاثة
         const stage = document.getElementById('stage');
