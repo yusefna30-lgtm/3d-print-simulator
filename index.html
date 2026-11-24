@@ -67,14 +67,14 @@
             transition: background-color 0.3s ease;
         }
 
-        /* إطار الورقة القياسية (A3 / A4 / A5) لتوضيح حدود مساحة الطباعة الحقيقية */
+        /* إطار حدود الورقة القياسية (يظهر فقط عند تحديد التصميم) */
         .paper-guide {
             position: absolute;
             transform: translate(-50%, -50%);
-            border: 1px dashed rgba(255, 255, 255, 0.28);
-            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px dashed rgba(255, 255, 255, 0.25);
+            background-color: rgba(255, 255, 255, 0.02);
             pointer-events: none;
-            transition: all 0.25s ease;
+            transition: opacity 0.2s ease, width 0.25s ease, height 0.25s ease, top 0.25s ease, left 0.25s ease;
             border-radius: 3px;
         }
         .paper-guide-tag {
@@ -86,6 +86,7 @@
             direction: ltr;
         }
 
+        /* طبقة التصميم: تدعم حالة التحديد وحالة المعاينة النظيفة */
         .print-layer {
             position: absolute;
             transform: translate(-50%, -50%);
@@ -94,20 +95,32 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1.5px dashed rgba(212, 175, 55, 0.75);
+            border: 1.5px dashed rgba(212, 175, 55, 0.8);
             border-radius: 2px;
             z-index: 10;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
         }
         .print-layer.smooth-resize {
-            transition: width 0.25s ease, height 0.25s ease, top 0.25s ease, left 0.25s ease;
+            transition: width 0.25s ease, height 0.25s ease, top 0.25s ease, left 0.25s ease, border-color 0.2s ease;
         }
-        .print-layer:hover, .print-layer.dragging {
+        .print-layer.dragging {
             border: 1.5px solid #D4AF37;
-            background-color: rgba(212, 175, 55, 0.1);
+            background-color: rgba(212, 175, 55, 0.08);
         }
         .print-layer.on-dark {
             mix-blend-mode: normal;
             filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45));
+        }
+
+        /* حالة المعاينة النظيفة عند الضغط خارج التصميم */
+        .print-layer.clean-view {
+            border-color: transparent !important;
+            background-color: transparent !important;
+        }
+        .print-layer.clean-view .resize-handle,
+        .print-layer.clean-view .live-cm-badge {
+            opacity: 0;
+            pointer-events: none;
         }
 
         .resize-handle {
@@ -119,7 +132,7 @@
             border-radius: 50%;
             z-index: 30;
             box-shadow: 0 0 6px rgba(0,0,0,0.8);
-            transition: transform 0.15s ease;
+            transition: transform 0.15s ease, opacity 0.2s ease;
         }
         .resize-handle:hover, .resize-handle:active {
             transform: scale(1.3);
@@ -145,6 +158,7 @@
             white-space: nowrap;
             pointer-events: none;
             direction: ltr;
+            transition: opacity 0.2s ease;
         }
     </style>
 </head>
@@ -156,7 +170,7 @@
             <div class="w-7 h-7 rounded-lg gold-bg flex items-center justify-center font-black text-xs">عِزوة</div>
             <div>
                 <h1 class="text-xs font-bold text-white leading-tight">محاكي مقاسات المطابع</h1>
-                <p class="text-[9.5px] text-stone-400">مقياس رسم حقيقي 1:1</p>
+                <p class="text-[9.5px] text-stone-400">اضغط خارج التصميم لإخفاء التحديد</p>
             </div>
         </div>
 
@@ -169,12 +183,12 @@
     </header>
 
     <!-- منطقة العرض الوسطى -->
-    <main class="flex-1 flex items-center justify-center w-full relative z-10 px-4 min-h-0">
+    <main id="main-area" class="flex-1 flex items-center justify-center w-full relative z-10 px-4 min-h-0">
         <div id="stage" class="mockup-stage cursor-grab active:cursor-grabbing">
             <img id="hoodie-img" src="front.jpg.jpg" alt="هودي" class="hoodie-img">
             <div id="color-tint" class="color-overlay" style="background-color: transparent;"></div>
             
-            <!-- إطار حدود الورقة القياسية (يوضح مقاس A3 / A4 / A5 الكامل) -->
+            <!-- إطار حدود الورقة القياسية -->
             <div id="paper-guide" class="paper-guide" style="top: 34%; left: 58%; width: 9.2%; height: 9.2%;">
                 <span id="paper-guide-tag" class="paper-guide-tag">8×8 cm</span>
             </div>
@@ -224,7 +238,7 @@
         </div>
     </main>
 
-    <!-- الشريط السفلي المدمج بدون أي قص -->
+    <!-- الشريط السفلي -->
     <footer class="w-full px-3 pb-2.5 pt-1 z-20 shrink-0">
         <div class="max-w-2xl mx-auto glass-panel rounded-2xl p-2.5 shadow-2xl">
             
@@ -234,8 +248,9 @@
                     <button id="tab-free" onclick="switchMode('free')" class="mode-btn px-2.5 py-1 rounded-lg text-[11px] text-stone-300 transition">مقاس حر (سحب الزوايا)</button>
                 </div>
 
-                <div class="flex items-center gap-1.5">
-                    <span class="text-[10px] text-stone-400">صافي التصميم:</span>
+                <!-- عرض واضح ومنظم للمقاس بدون تداخل لغوي -->
+                <div class="flex items-center gap-1.5 bg-black/40 px-2.5 py-1 rounded-lg border border-stone-800">
+                    <span id="paper-name-label" class="text-[10.5px] text-stone-300">شعار صدر:</span>
                     <span id="size-label" class="text-[11px] gold-accent font-bold" dir="ltr">8.0 × 8.0 cm</span>
                 </div>
             </div>
@@ -263,7 +278,7 @@
                 </div>
             </div>
 
-            <!-- أزرار الإجراءات: حفظ الصورة + إرسال واتساب -->
+            <!-- أزرار الإجراءات -->
             <div class="grid grid-cols-3 gap-2">
                 <button onclick="saveDesignImage()" class="col-span-1 py-2 px-2 rounded-xl bg-stone-800 border border-[#D4AF37]/50 text-[#D4AF37] font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-stone-700 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -282,6 +297,7 @@
     <script>
         let designAspectRatio = 1.0;
         let lockAspectRatio = true;
+        let isPrintSelected = true;
 
         function initDefaultLogo() {
             const c = document.createElement('canvas');
@@ -313,7 +329,6 @@
         let currentWcm = 8.0;
         let currentHcm = 8.0;
 
-        // مقياس رسم واقعي يطابق حجم الهودي الفعلي (1 سم = 1.15% من الإطار)
         const CM_TO_PERCENT = 1.15;
 
         const imagesMap = {
@@ -344,7 +359,7 @@
                 { short: 'A5 (14.8 × 21 سم)',     label: 'ورقة A5',       top: '44%', left: '49%', maxW: 14.8, maxH: 21,   fixedBox: false },
                 { short: 'A4 (21 × 29.7 سم)',     label: 'ورقة A4',       top: '48%', left: '49%', maxW: 21,   maxH: 29.7, fixedBox: false },
                 { short: 'ظهر كبير (30 × 35 سم)', label: 'ظهر كبير',      top: '51%', left: '49%', maxW: 30,   maxH: 35,   fixedBox: false },
-                { short: 'A3 (29.7 × 42 سم)',     label: 'ورقة A3 كاملة', top: '53%', left: '49%', maxW: 29.7, maxH: 42,   fixedBox: false }
+                { short: 'A3 (29.7 × 42 سم)',     label: 'ورقة A3',       top: '53%', left: '49%', maxW: 29.7, maxH: 42,   fixedBox: false }
             ],
             side_right: [
                 { short: 'شعار كم (8 سم)',        label: 'كم قياسي',      top: '42%', left: '44%', maxW: 8,    maxH: 8,    fixedBox: false },
@@ -357,6 +372,20 @@
                 { short: 'كم طولي (8 × 25 سم)',   label: 'كم طولي',       top: '49%', left: '53%', maxW: 8,    maxH: 25,   fixedBox: true }
             ]
         };
+
+        // التحكم بإظهار وإخفاء التحديد للمعاينة النظيفة
+        function setPrintSelected(selected) {
+            isPrintSelected = selected;
+            const printBox = document.getElementById('print-box');
+            const paperGuide = document.getElementById('paper-guide');
+            if (selected) {
+                printBox.classList.remove('clean-view');
+                if (currentMode === 'presets') paperGuide.style.opacity = '1';
+            } else {
+                printBox.classList.add('clean-view');
+                paperGuide.style.opacity = '0';
+            }
+        }
 
         function toggleRatioLock() {
             lockAspectRatio = !lockAspectRatio;
@@ -392,7 +421,8 @@
 
             const textCm = `${currentWcm} × ${currentHcm} cm`;
             document.getElementById('live-badge').innerText = textCm;
-            document.getElementById('size-label').innerText = paperLabel ? `${paperLabel} | صافي: ${textCm}` : textCm;
+            document.getElementById('paper-name-label').innerText = paperLabel ? `${paperLabel} | صافي التصميم:` : 'المقاس الفعلي:';
+            document.getElementById('size-label').innerText = textCm;
 
             document.getElementById('input-w-cm').value = currentWcm;
             document.getElementById('input-h-cm').value = currentHcm;
@@ -400,6 +430,7 @@
 
         function switchMode(mode) {
             currentMode = mode;
+            setPrintSelected(true);
             const tabPresets = document.getElementById('tab-presets');
             const tabFree = document.getElementById('tab-free');
             const panelPresets = document.getElementById('presets-panel');
@@ -428,6 +459,7 @@
         }
 
         function applyManualCm(changedAxis) {
+            setPrintSelected(true);
             let w = parseFloat(document.getElementById('input-w-cm').value) || 8;
             let h = parseFloat(document.getElementById('input-h-cm').value) || 8;
 
@@ -459,6 +491,7 @@
         function selectSize(idx) {
             currentSizeIndex = idx;
             customMoved = false;
+            setPrintSelected(true);
             const list = angleSizes[currentAngle];
             const cfg = list[idx];
 
@@ -466,16 +499,14 @@
                 b.classList.toggle('active', i === idx);
             });
 
-            // 1. رسم إطار الورقة القياسية الكامل (مثل A3 = 29.7 × 42 cm)
             const paperGuide = document.getElementById('paper-guide');
             paperGuide.style.opacity = '1';
             paperGuide.style.top = cfg.top;
             paperGuide.style.left = cfg.left;
             paperGuide.style.width = (cfg.maxW * CM_TO_PERCENT) + '%';
             paperGuide.style.height = (cfg.maxH * CM_TO_PERCENT) + '%';
-            document.getElementById('paper-guide-tag').innerText = `${cfg.label} (${cfg.maxW}×${cfg.maxH} cm)`;
+            document.getElementById('paper-guide-tag').innerText = `${cfg.maxW}×${cfg.maxH} cm`;
 
-            // 2. وضع التصميم داخل إطار الورقة مع حفظ التناسب الحقيقي للصورة
             const printBox = document.getElementById('print-box');
             printBox.classList.add('smooth-resize');
             printBox.style.top = cfg.top;
@@ -520,6 +551,7 @@
         }
 
         function resetPosition() {
+            setPrintSelected(true);
             const printBox = document.getElementById('print-box');
             const paperGuide = document.getElementById('paper-guide');
             printBox.classList.add('smooth-resize');
@@ -553,6 +585,7 @@
                 tempImg.onload = function() {
                     designAspectRatio = tempImg.naturalWidth / tempImg.naturalHeight;
                     document.getElementById('print-img').src = e.target.result;
+                    setPrintSelected(true);
                     if (currentMode === 'presets') selectSize(currentSizeIndex);
                     else applyManualCm('w');
                 };
@@ -640,6 +673,7 @@
         setAngle('front');
 
         const stage = document.getElementById('stage');
+        const mainArea = document.getElementById('main-area');
         const printBox = document.getElementById('print-box');
         const paperGuide = document.getElementById('paper-guide');
         let isDraggingPrint = false;
@@ -648,9 +682,11 @@
         let startX = 0;
         const anglesOrder = ['front', 'side_right', 'back', 'side_left'];
 
+        // الضغط على زوايا التصميم
         document.querySelectorAll('.resize-handle').forEach(handle => {
             handle.addEventListener('pointerdown', (e) => {
                 e.stopPropagation();
+                setPrintSelected(true);
                 activeCorner = handle.dataset.corner;
                 printBox.classList.remove('smooth-resize');
                 printBox.classList.add('dragging');
@@ -658,18 +694,28 @@
             });
         });
 
+        // الضغط على جسم التصميم نفسه يظهر التحديد ويبدأ السحب
         printBox.addEventListener('pointerdown', (e) => {
             if (activeCorner) return;
             e.stopPropagation();
+            setPrintSelected(true);
             isDraggingPrint = true;
             printBox.classList.remove('smooth-resize');
             printBox.classList.add('dragging');
         });
 
+        // الضغط على الهودي أو الخلفية خارج التصميم يخفي التحديد فوراً للمعاينة النظيفة
         stage.addEventListener('pointerdown', (e) => {
             if (isDraggingPrint || activeCorner) return;
+            setPrintSelected(false);
             isSwipingStage = true;
             startX = e.clientX;
+        });
+
+        mainArea.addEventListener('pointerdown', (e) => {
+            if (e.target === mainArea) {
+                setPrintSelected(false);
+            }
         });
 
         window.addEventListener('pointermove', (e) => {
