@@ -95,7 +95,7 @@
             <div class="w-8 h-8 rounded-lg gold-bg flex items-center justify-center font-black text-sm">عِزوة</div>
             <div>
                 <h1 class="text-xs sm:text-sm font-bold text-white leading-tight">محاكي طباعة الهودي</h1>
-                <p class="text-[10px] text-stone-400">مقياس رسم هندسي دقيق 1:1</p>
+                <p class="text-[10px] text-stone-400">اسحب التصميم لتحريكه بحرية</p>
             </div>
         </div>
 
@@ -113,8 +113,7 @@
             <img id="hoodie-img" src="front.jpg.jpg" alt="هودي" class="hoodie-img">
             <div id="color-tint" class="color-overlay" style="background-color: transparent;"></div>
             
-            <!-- التصميم بمقياس رسم حقيقي -->
-            <div id="print-box" class="print-layer" style="top: 35%; left: 58%; width: 4.3%; height: 4.3%;" title="اسحب لتحريك مكان التصميم">
+            <div id="print-box" class="print-layer" style="top: 34%; left: 58%; width: 6.9%; height: 6.9%;" title="اسحب لتحريك مكان التصميم">
                 <img id="print-img" src="" alt="التصميم" class="w-full h-full object-contain pointer-events-none">
             </div>
         </div>
@@ -147,15 +146,15 @@
         </div>
     </main>
 
-    <!-- الشريط السفلي للمقاسات القياسية الحقيقية -->
+    <!-- الشريط السفلي للمقاسات القياسية المعتمدة -->
     <footer class="w-full p-2.5 z-20">
         <div class="max-w-2xl mx-auto glass-panel rounded-2xl p-3 shadow-2xl">
             <div class="flex justify-between items-center mb-2">
-                <span id="angle-sizes-title" class="text-xs font-bold text-white">مقاسات الأمام القياسية:</span>
-                <span id="size-label" class="text-[11px] gold-accent font-bold">شعار صدر (5 × 5 سم)</span>
+                <span id="angle-sizes-title" class="text-xs font-bold text-white">مقاسات الأمام المعتمدة:</span>
+                <span id="size-label" class="text-[11px] gold-accent font-bold">شعار صدر جانبي (8 × 8 سم)</span>
             </div>
 
-            <div id="sizes-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-1.5 mb-2.5"></div>
+            <div id="sizes-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mb-2.5"></div>
 
             <button onclick="orderWhatsApp()" class="w-full py-2.5 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
                 <span>اعتماد المقاس والمكان والطلب عبر واتساب</span>
@@ -184,11 +183,11 @@
         initDefaultLogo();
 
         let currentAngle = 'front';
-        let currentSizeIndex = 1;
+        let currentSizeIndex = 0;
         let currentColorName = 'أبيض';
         let customMoved = false;
 
-        // معامل التحويل الهندسي الدقيق: عرض الهودي 56 سم = 48% من الإطار => 1 سم = 0.86%
+        // مقياس الرسم الهندسي للهودي الأوفر سايز (1 سم = 0.86% من عرض الإطار)
         const CM_TO_PERCENT = 0.86;
 
         const imagesMap = {
@@ -205,44 +204,41 @@
             side_left:  'الكم الأيسر'
         };
 
-        // المقاسات بالسنتمتر الحقيقي (w_cm × h_cm)
+        // المقاسات القياسية المعتمدة والمعمول بها في الطباعة على الهودي
         const angleSizes = {
             front: [
-                { short: '3 × 3 سم',          label: 'شعار مصغّر (3 × 3 سم)',        top: '34%', left: '58%', w_cm: 3,    h_cm: 3 },
-                { short: '5 × 5 سم',          label: 'شعار صدر جانبي (5 × 5 سم)',   top: '35%', left: '58%', w_cm: 5,    h_cm: 5 },
-                { short: '8 × 8 سم',          label: 'شعار صدر بارز (8 × 8 سم)',    top: '36%', left: '57%', w_cm: 8,    h_cm: 8 },
-                { short: '10 × 10 سم',        label: 'وسط الصدر (10 × 10 سم)',      top: '38%', left: '49%', w_cm: 10,   h_cm: 10 },
-                { short: 'A6 (10.5×14.8)',    label: 'مقاس A6 صدر (10.5 × 14.8 سم)',top: '40%', left: '49%', w_cm: 10.5, h_cm: 14.8 },
-                { short: 'A5 (14.8×21)',      label: 'مقاس A5 صدر (14.8 × 21 سم)',  top: '42%', left: '49%', w_cm: 14.8, h_cm: 21 },
-                { short: '24 × 8 سم (عريض)',  label: 'صدر عريض (24 × 8 سم)',        top: '36%', left: '49%', w_cm: 24,   h_cm: 8 }
+                { short: '8 × 8 سم (صدر)',      label: 'شعار صدر جانبي (8 × 8 سم)',    top: '34%', left: '58%', w_cm: 8,    h_cm: 8 },
+                { short: '10 × 5 سم (أفقي)',    label: 'شعار صدر أفقي (10 × 5 سم)',    top: '34%', left: '58%', w_cm: 10,   h_cm: 5 },
+                { short: '20 × 20 سم (وسط)',    label: 'وسط الصدر (20 × 20 سم)',       top: '39%', left: '49%', w_cm: 20,   h_cm: 20 },
+                { short: '25 × 10 سم (عريض)',   label: 'صدر عريض أفقي (25 × 10 سم)',   top: '36%', left: '49%', w_cm: 25,   h_cm: 10 },
+                { short: 'A5 (14.8 × 21 سم)',   label: 'مقاس A5 صدر (14.8 × 21 سم)',   top: '40%', left: '49%', w_cm: 14.8, h_cm: 21 },
+                { short: 'A4 (21 × 29.7 سم)',   label: 'مقاس A4 صدر (21 × 29.7 سم)',   top: '43%', left: '49%', w_cm: 21,   h_cm: 29.7 }
             ],
             back: [
-                { short: '5 × 5 سم (ياقة)',   label: 'ظهر أسفل الياقة (5 × 5 سم)',   top: '32%', left: '49%', w_cm: 5,    h_cm: 5 },
-                { short: '10 × 10 سم',        label: 'وسط الظهر العلوي (10 × 10 سم)',top: '37%', left: '49%', w_cm: 10,   h_cm: 10 },
-                { short: 'A6 (10.5×14.8)',    label: 'مقاس A6 ظهر (10.5 × 14.8 سم)', top: '40%', left: '49%', w_cm: 10.5, h_cm: 14.8 },
-                { short: 'A5 (14.8×21)',      label: 'مقاس A5 ظهر (14.8 × 21 سم)',   top: '43%', left: '49%', w_cm: 14.8, h_cm: 21 },
-                { short: '20 × 25 سم',        label: 'ظهر متوسط (20 × 25 سم)',       top: '46%', left: '49%', w_cm: 20,   h_cm: 25 },
-                { short: 'A4 (21×29.7)',      label: 'مقاس A4 ظهر (21 × 29.7 سم)',   top: '48%', left: '49%', w_cm: 21,   h_cm: 29.7 },
-                { short: '30 × 40 سم (كامل)', label: 'ظهر كامل كبير (30 × 40 سم)',   top: '52%', left: '49%', w_cm: 30,   h_cm: 40 }
+                { short: '8 × 8 سم (أسفل قبعة)', label: 'ظهر أسفل القبعة (8 × 8 سم)',   top: '34%', left: '49%', w_cm: 8,    h_cm: 8 },
+                { short: '10 × 4 سم (أفقي)',     label: 'شعار أفقي أسفل القبعة (10×4)',  top: '33%', left: '49%', w_cm: 10,   h_cm: 4 },
+                { short: 'A4 (21 × 29.7 سم)',    label: 'وسط الظهر A4 (21 × 29.7 سم)',   top: '47%', left: '49%', w_cm: 21,   h_cm: 29.7 },
+                { short: '28 × 35 سم (كبير)',    label: 'ظهر كبير قياسي (28 × 35 سم)',   top: '50%', left: '49%', w_cm: 28,   h_cm: 35 },
+                { short: 'A3 (29.7 × 42 سم)',    label: 'ظهر كامل A3 (29.7 × 42 سم)',    top: '53%', left: '49%', w_cm: 29.7, h_cm: 42 }
             ],
             side_right: [
-                { short: '5 × 5 سم',          label: 'كم أيمن صغير (5 × 5 سم)',     top: '42%', left: '44%', w_cm: 5,    h_cm: 5 },
-                { short: '8 × 8 سم',          label: 'كم أيمن قياسي (8 × 8 سم)',    top: '43%', left: '44%', w_cm: 8,    h_cm: 8 },
-                { short: '10 × 10 سم',        label: 'كم أيمن كبير (10 × 10 سم)',   top: '44%', left: '44%', w_cm: 10,   h_cm: 10 },
-                { short: '6 × 20 سم (طولي)',  label: 'كم أيمن طولي (6 × 20 سم)',    top: '49%', left: '44%', w_cm: 6,    h_cm: 20 }
+                { short: '8 × 8 سم (شعار)',      label: 'كم أيمن قياسي (8 × 8 سم)',     top: '42%', left: '44%', w_cm: 8,    h_cm: 8 },
+                { short: '9 × 9 سم (بارز)',      label: 'كم أيمن بارز (9 × 9 سم)',      top: '42%', left: '44%', w_cm: 9,    h_cm: 9 },
+                { short: '8 × 25 سم (طولي)',     label: 'كم أيمن طولي (8 × 25 سم)',     top: '49%', left: '44%', w_cm: 8,    h_cm: 25 },
+                { short: '9 × 30 سم (ممتد)',     label: 'كم أيمن ممتد (9 × 30 سم)',     top: '51%', left: '44%', w_cm: 9,    h_cm: 30 }
             ],
             side_left: [
-                { short: '5 × 5 سم',          label: 'كم أيسر صغير (5 × 5 سم)',     top: '42%', left: '53%', w_cm: 5,    h_cm: 5 },
-                { short: '8 × 8 سم',          label: 'كم أيسر قياسي (8 × 8 سم)',    top: '43%', left: '53%', w_cm: 8,    h_cm: 8 },
-                { short: '10 × 10 سم',        label: 'كم أيسر كبير (10 × 10 سم)',   top: '44%', left: '53%', w_cm: 10,   h_cm: 10 },
-                { short: '6 × 20 سم (طولي)',  label: 'كم أيسر طولي (6 × 20 سم)',    top: '49%', left: '53%', w_cm: 6,    h_cm: 20 }
+                { short: '8 × 8 سم (شعار)',      label: 'كم أيسر قياسي (8 × 8 سم)',     top: '42%', left: '53%', w_cm: 8,    h_cm: 8 },
+                { short: '9 × 9 سم (بارز)',      label: 'كم أيسر بارز (9 × 9 سم)',      top: '42%', left: '53%', w_cm: 9,    h_cm: 9 },
+                { short: '8 × 25 سم (طولي)',     label: 'كم أيسر طولي (8 × 25 سم)',     top: '49%', left: '53%', w_cm: 8,    h_cm: 25 },
+                { short: '9 × 30 سم (ممتد)',     label: 'كم أيسر ممتد (9 × 30 سم)',     top: '51%', left: '53%', w_cm: 9,    h_cm: 30 }
             ]
         };
 
         function renderSizesButtons() {
             const grid = document.getElementById('sizes-grid');
             const list = angleSizes[currentAngle];
-            document.getElementById('angle-sizes-title').innerText = `مقاسات ${angleNames[currentAngle]} بالسنتمتر الحقيقي:`;
+            document.getElementById('angle-sizes-title').innerText = `مقاسات ${angleNames[currentAngle]} المعتمدة:`;
 
             grid.innerHTML = '';
             list.forEach((item, idx) => {
@@ -287,7 +283,8 @@
                 activeBtn.classList.remove('text-stone-300');
             }
 
-            currentSizeIndex = (ang === 'back') ? 4 : (ang === 'front') ? 1 : 1;
+            // مقاس افتراضي مناسب عند فتح كل جهة
+            currentSizeIndex = (ang === 'back') ? 3 : 0;
             if (currentSizeIndex >= angleSizes[ang].length) currentSizeIndex = 0;
 
             renderSizesButtons();
@@ -334,6 +331,7 @@
 
         setAngle('front');
 
+        // تحريك التصميم بحرية + تقليب الأوجه بالسحب
         const stage = document.getElementById('stage');
         const printBox = document.getElementById('print-box');
         let isDraggingPrint = false;
