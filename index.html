@@ -170,7 +170,7 @@
             <div id="color-tint" class="color-overlay" style="background-color: transparent;"></div>
             
             <!-- صندوق التصميم بمقياس رسم حقيقي معاير على الهودي -->
-            <div id="print-box" class="print-layer smooth-resize" style="top: 34%; left: 58%; width: 6.24%; height: 6.24%;">
+            <div id="print-box" class="print-layer smooth-resize" style="top: 34%; left: 57%; width: 9.2%; height: 9.2%;">
                 <div id="live-badge" class="live-cm-badge">8.0 × 8.0 cm</div>
                 <img id="print-img" src="" alt="التصميم" class="w-full h-full object-contain pointer-events-none">
                 
@@ -267,7 +267,7 @@
     </footer>
 
     <script>
-        let hasUserUploadedDesign = false; // لا يُفرض التناسب إلا إذا رفع المستخدم صورته
+        let hasUserUploadedDesign = false;
         let designAspectRatio = 1.0;
         let lockAspectRatio = true;
 
@@ -300,8 +300,8 @@
         let currentWcm = 8.0;
         let currentHcm = 8.0;
 
-        // مقياس الرسم الهندسي المعاير بدقة على صورة الهودي (عرض الصدر 58 سم = 45% من الصورة => 1 سم = 0.78%)
-        const CM_TO_PERCENT = 0.78;
+        // مقياس الرسم الهندسي المعاير على قماش الهودي الفعلي (1 سم = 1.15% من الإطار)
+        const CM_TO_PERCENT = 1.15;
 
         const imagesMap = {
             front:      'front.jpg.jpg',
@@ -470,8 +470,6 @@
             let finalW = cfg.maxW;
             let finalH = cfg.maxH;
 
-            // إذا رفع المستخدم صورته وكان التناسب مقفلاً، تُضبط الأبعاد وفق صورته
-            // أما بدون رفع صورة، فيأخذ المقاس أبعاده القياسية الكاملة بالضبط
             if (hasUserUploadedDesign && lockAspectRatio) {
                 if (designAspectRatio >= (cfg.maxW / cfg.maxH)) {
                     finalW = cfg.maxW;
