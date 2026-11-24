@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>محاكي طباعة الهودي القياسي | عِزوة</title>
+    <title>استوديو المحاكاة والإنتاج | عِزوة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
@@ -25,7 +25,7 @@
         }
         .gold-accent { color: #D4AF37; }
         .gold-bg { background-color: #D4AF37; color: #121212; }
-        .size-btn.active, .mode-btn.active {
+        .size-btn.active, .mode-btn.active, .prod-btn.active {
             background-color: #D4AF37;
             color: #121212;
             font-weight: 700;
@@ -45,14 +45,14 @@
         .mockup-stage {
             position: relative;
             width: min(80vw, 350px);
-            height: min(44dvh, 350px);
+            height: min(43dvh, 350px);
             overflow: hidden;
             border-radius: 22px;
             border: 1px solid rgba(212, 175, 55, 0.15);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
             background-color: #000000;
         }
-        .hoodie-img {
+        .garment-img {
             width: 100%;
             height: 100%;
             object-fit: contain;
@@ -88,12 +88,13 @@
             border: 1.5px solid #D4AF37;
             background-color: rgba(212, 175, 55, 0.1);
         }
-        .print-layer.on-dark {
+        .print-layer.on-dark, .print-layer.transparent-bg {
             mix-blend-mode: normal;
+        }
+        .print-layer.on-dark {
             filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45));
         }
 
-        /* المعاينة النظيفة عند الضغط خارج التصميم */
         .print-layer.clean-view {
             border-color: transparent !important;
             background-color: transparent !important;
@@ -145,31 +146,45 @@
 </head>
 <body class="w-screen flex flex-col justify-between items-center relative">
 
-    <!-- الشريط العلوي -->
-    <header class="w-full px-3 pt-2.5 pb-1 flex justify-between items-center z-20 shrink-0">
-        <div class="glass-panel px-3 py-1 rounded-xl flex items-center gap-2">
-            <div class="w-7 h-7 rounded-lg gold-bg flex items-center justify-center font-black text-xs">عِزوة</div>
-            <div>
-                <h1 class="text-xs font-bold text-white leading-tight">محاكي مقاسات المطابع</h1>
-                <p class="text-[9.5px] text-stone-400">اضغط خارج التصميم لمعاينة نظيفة</p>
+    <!-- الشريط العلوي: الشعار + اختيار القطعة (هودي / تيشيرت) + الزوايا -->
+    <header class="w-full px-3 pt-2.5 pb-1 flex flex-wrap justify-between items-center gap-1.5 z-20 shrink-0">
+        <div class="flex items-center gap-1.5">
+            <div class="glass-panel px-2.5 py-1 rounded-xl flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg gold-bg flex items-center justify-center font-black text-xs">عِزوة</div>
+                <div class="hidden sm:block">
+                    <h1 class="text-xs font-bold text-white leading-tight">استوديو الطباعة</h1>
+                    <p class="text-[9px] text-stone-400">معاينة وإنتاج</p>
+                </div>
+            </div>
+
+            <!-- التطوير (4): مبدل القطعة (هودي / تيشيرت بوكسي) -->
+            <div class="glass-panel p-1 rounded-xl flex gap-1">
+                <button id="prod-hoodie" onclick="setProduct('hoodie')" class="prod-btn active px-2.5 py-1 rounded-lg text-[11px] transition">هودي</button>
+                <button id="prod-tshirt" onclick="setProduct('tshirt')" class="prod-btn px-2.5 py-1 rounded-lg text-[11px] text-stone-300 transition">تيشيرت بوكسي</button>
             </div>
         </div>
 
         <div class="glass-panel p-1 rounded-xl flex gap-1">
-            <button id="ang-front" onclick="setAngle('front')" class="angle-btn active px-2.5 py-1 rounded-lg text-[11px] transition">الأمام</button>
-            <button id="ang-side_right" onclick="setAngle('side_right')" class="angle-btn px-2.5 py-1 rounded-lg text-[11px] text-stone-300 transition">كم يمين</button>
-            <button id="ang-back" onclick="setAngle('back')" class="angle-btn px-2.5 py-1 rounded-lg text-[11px] text-stone-300 transition">الظهر</button>
-            <button id="ang-side_left" onclick="setAngle('side_left')" class="angle-btn px-2.5 py-1 rounded-lg text-[11px] text-stone-300 transition">كم يسار</button>
+            <button id="ang-front" onclick="setAngle('front')" class="angle-btn active px-2 py-1 rounded-lg text-[11px] transition">الأمام</button>
+            <button id="ang-side_right" onclick="setAngle('side_right')" class="angle-btn px-2 py-1 rounded-lg text-[11px] text-stone-300 transition">كم يمين</button>
+            <button id="ang-back" onclick="setAngle('back')" class="angle-btn px-2 py-1 rounded-lg text-[11px] text-stone-300 transition">الظهر</button>
+            <button id="ang-side_left" onclick="setAngle('side_left')" class="angle-btn px-2 py-1 rounded-lg text-[11px] text-stone-300 transition">كم يسار</button>
         </div>
     </header>
 
     <!-- منطقة العرض الوسطى -->
-    <main id="main-area" class="flex-1 flex items-center justify-center w-full relative z-10 px-4 min-h-0">
+    <main id="main-area" class="flex-1 flex flex-col items-center justify-center w-full relative z-10 px-4 min-h-0">
+        
+        <!-- التطوير (3): شريط مؤشر جودة الطباعة DPI -->
+        <div id="dpi-banner" class="mb-1.5 px-3 py-0.5 rounded-full glass-panel flex items-center gap-1.5 text-[10px]">
+            <span id="dpi-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span id="dpi-text" class="text-stone-200 font-semibold">جودة التصميم: ممتازة للطباعة (300 DPI)</span>
+        </div>
+
         <div id="stage" class="mockup-stage cursor-grab active:cursor-grabbing">
-            <img id="hoodie-img" src="front.jpg.jpg" alt="هودي" class="hoodie-img">
+            <img id="garment-img" src="front.jpg.jpg" alt="القطعة" class="garment-img">
             <div id="color-tint" class="color-overlay" style="background-color: transparent;"></div>
             
-            <!-- صندوق التصميم بمقياس رسم حقيقي معاير على الهودي -->
             <div id="print-box" class="print-layer smooth-resize" style="top: 34%; left: 57%; width: 9.2%; height: 9.2%;">
                 <div id="live-badge" class="live-cm-badge">8.0 × 8.0 cm</div>
                 <img id="print-img" src="" alt="التصميم" class="w-full h-full object-contain pointer-events-none">
@@ -181,7 +196,7 @@
             </div>
         </div>
 
-        <!-- أدوات التحكم الجانبية -->
+        <!-- أدوات التحكم الجانبية (الألوان + رفع + تفريغ الخلفية + قفل التناسب + توسيط) -->
         <div class="fixed left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1.5">
             <div class="glass-panel p-1.5 rounded-xl flex flex-col items-center gap-1.5">
                 <span class="text-[9px] text-stone-400">اللون</span>
@@ -199,6 +214,12 @@
                 <span class="text-[8.5px] font-bold text-white leading-tight">ارفع<br>تصميمك</span>
                 <input type="file" accept="image/*" class="hidden" onchange="uploadDesign(event)">
             </label>
+
+            <!-- التطوير (3): زر تفريغ الخلفية البيضاء تلقائياً -->
+            <button id="btn-remove-bg" onclick="toggleRemoveWhiteBg()" class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center hover:border-[#D4AF37] transition text-center" title="إزالة الخلفية البيضاء من الشعار">
+                <span class="text-xs mb-0.5">✨</span>
+                <span id="bg-btn-text" class="text-[8px] font-bold text-stone-300 leading-tight">تفريغ<br>الأبيض</span>
+            </button>
 
             <button id="btn-lock-ratio" onclick="toggleRatioLock()" class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center border-[#D4AF37] transition text-center">
                 <span id="lock-icon" class="text-[11px]">🔒</span>
@@ -251,12 +272,13 @@
                 </div>
             </div>
 
+            <!-- التطوير (5): زر حفظ ملف الإنتاج المتكامل للمطبعة + زر واتساب -->
             <div class="grid grid-cols-3 gap-2">
-                <button onclick="saveDesignImage()" class="col-span-1 py-2 px-2 rounded-xl bg-stone-800 border border-[#D4AF37]/50 text-[#D4AF37] font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-stone-700 transition">
+                <button onclick="saveProductionSheet()" class="col-span-1 py-2 px-2 rounded-xl bg-stone-800 border border-[#D4AF37]/60 text-[#D4AF37] font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 hover:bg-stone-700 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <span>حفظ الصورة</span>
+                    <span>ملف الإنتاج</span>
                 </button>
 
                 <button onclick="orderWhatsApp()" class="col-span-2 py-2 px-3 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
@@ -270,26 +292,79 @@
         let hasUserUploadedDesign = false;
         let designAspectRatio = 1.0;
         let lockAspectRatio = true;
+        let isBgRemoved = false;
+        let originalDesignDataUrl = '';
+        let transparentDesignDataUrl = '';
+        let designNaturalW = 1200;
+        let designNaturalH = 1200;
+
+        // توليد صورة بديلة للتيشيرت البوكسي في حال عدم رفع صور تيشيرت منفصلة بعد
+        function generateTshirtFallback(angle) {
+            const c = document.createElement('canvas');
+            c.width = 600; c.height = 600;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, 600, 600);
+
+            ctx.fillStyle = '#f2f2f2';
+            ctx.beginPath();
+            if (angle === 'front' || angle === 'back') {
+                // قصة تيشيرت بوكسي فيت (أكتاف عريضة وأكمام نصفية واسعة)
+                ctx.moveTo(220, 110);
+                ctx.lineTo(380, 110);
+                ctx.lineTo(520, 175);
+                ctx.lineTo(485, 290);
+                ctx.lineTo(425, 265);
+                ctx.lineTo(425, 510);
+                ctx.lineTo(175, 510);
+                ctx.lineTo(175, 265);
+                ctx.lineTo(115, 290);
+                ctx.lineTo(80, 175);
+                ctx.closePath();
+                ctx.fill();
+
+                // ياقة دائرية سميكة
+                ctx.strokeStyle = '#d4d4d4';
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                if (angle === 'front') ctx.arc(300, 112, 52, 0.1 * Math.PI, 0.9 * Math.PI);
+                else ctx.arc(300, 110, 52, 0.05 * Math.PI, 0.95 * Math.PI);
+                ctx.stroke();
+            } else {
+                // عرض جانبي للتيشيرت البوكسي
+                ctx.moveTo(240, 115);
+                ctx.lineTo(360, 115);
+                ctx.lineTo(395, 280);
+                ctx.lineTo(375, 510);
+                ctx.lineTo(225, 510);
+                ctx.lineTo(205, 280);
+                ctx.closePath();
+                ctx.fill();
+            }
+            return c.toDataURL();
+        }
 
         function initDefaultLogo() {
             const c = document.createElement('canvas');
-            c.width = 400; c.height = 400;
+            c.width = 1200; c.height = 1200;
             const ctx = c.getContext('2d');
             ctx.strokeStyle = '#D4AF37';
-            ctx.lineWidth = 16;
-            ctx.strokeRect(16, 16, 368, 368);
+            ctx.lineWidth = 42;
+            ctx.strokeRect(48, 48, 1104, 1104);
             ctx.fillStyle = '#D4AF37';
-            ctx.font = 'bold 90px Cairo, sans-serif';
+            ctx.font = 'bold 260px Cairo, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('عِـزوة', 200, 175);
-            ctx.font = 'bold 34px Cairo, sans-serif';
+            ctx.fillText('عِـزوة', 600, 520);
+            ctx.font = 'bold 95px Cairo, sans-serif';
             ctx.fillStyle = '#666666';
-            ctx.fillText('EZWA', 200, 265);
-            document.getElementById('print-img').src = c.toDataURL();
+            ctx.fillText('EZWA STUDIO', 600, 780);
+            originalDesignDataUrl = c.toDataURL();
+            document.getElementById('print-img').src = originalDesignDataUrl;
         }
         initDefaultLogo();
 
+        let currentProduct = 'hoodie';
         let currentAngle = 'front';
         let currentSizeIndex = 0;
         let currentColorName = 'أبيض';
@@ -300,14 +375,26 @@
         let currentWcm = 8.0;
         let currentHcm = 8.0;
 
-        // مقياس الرسم الهندسي المعاير على قماش الهودي الفعلي (1 سم = 1.15% من الإطار)
         const CM_TO_PERCENT = 1.15;
 
-        const imagesMap = {
-            front:      'front.jpg.jpg',
-            side_right: 'side_right.jpg.jpg',
-            back:       'back.jpg.jpg',
-            side_left:  'side_left.jpg.jpg'
+        const productImages = {
+            hoodie: {
+                front:      'front.jpg.jpg',
+                side_right: 'side_right.jpg.jpg',
+                back:       'back.jpg.jpg',
+                side_left:  'side_left.jpg.jpg'
+            },
+            tshirt: {
+                front:      'tshirt_front.jpg.jpg',
+                side_right: 'tshirt_side_right.jpg.jpg',
+                back:       'tshirt_back.jpg.jpg',
+                side_left:  'tshirt_side_left.jpg.jpg'
+            }
+        };
+
+        const productNames = {
+            hoodie: 'هودي أوفر سايز',
+            tshirt: 'تيشيرت بوكسي فيت'
         };
 
         const angleNames = {
@@ -317,33 +404,141 @@
             side_left:  'الكم الأيسر'
         };
 
-        const angleSizes = {
-            front: [
-                { short: 'شعار صدر (8 × 8 سم)',   label: 'شعار صدر',     top: '34%', left: '57%', maxW: 8,    maxH: 8 },
-                { short: 'شعار بارز (10 × 10 سم)', label: 'شعار بارز',     top: '34%', left: '57%', maxW: 10,   maxH: 10 },
-                { short: 'وسط الصدر (20 × 20 سم)', label: 'وسط الصدر',     top: '39%', left: '49%', maxW: 20,   maxH: 20 },
-                { short: 'صدر عريض (25 × 10 سم)',  label: 'صدر عريض',      top: '36%', left: '49%', maxW: 25,   maxH: 10 },
-                { short: 'A5 (14.8 × 21 سم)',      label: 'مقاس A5',       top: '40%', left: '49%', maxW: 14.8, maxH: 21 },
-                { short: 'A4 (21 × 29.7 سم)',      label: 'مقاس A4',       top: '42%', left: '49%', maxW: 21,   maxH: 29.7 }
-            ],
-            back: [
-                { short: 'أسفل القبعة (8 × 8 سم)',label: 'أسفل القبعة',   top: '32%', left: '49%', maxW: 8,    maxH: 8 },
-                { short: 'A5 (14.8 × 21 سم)',      label: 'مقاس A5',       top: '42%', left: '49%', maxW: 14.8, maxH: 21 },
-                { short: 'A4 (21 × 29.7 سم)',      label: 'مقاس A4',       top: '45%', left: '49%', maxW: 21,   maxH: 29.7 },
-                { short: 'ظهر كبير (30 × 35 سم)',  label: 'ظهر كبير',      top: '47%', left: '49%', maxW: 30,   maxH: 35 },
-                { short: 'A3 (29.7 × 42 سم)',      label: 'مقاس A3 كامل',  top: '49%', left: '49%', maxW: 29.7, maxH: 42 }
-            ],
-            side_right: [
-                { short: 'شعار كم (8 × 8 سم)',     label: 'كم قياسي',      top: '41%', left: '44%', maxW: 8,    maxH: 8 },
-                { short: 'كم بارز (10 × 10 سم)',   label: 'كم بارز',       top: '41%', left: '44%', maxW: 10,   maxH: 10 },
-                { short: 'كم طولي (8 × 25 سم)',    label: 'كم طولي',       top: '48%', left: '44%', maxW: 8,    maxH: 25 }
-            ],
-            side_left: [
-                { short: 'شعار كم (8 × 8 سم)',     label: 'كم قياسي',      top: '41%', left: '53%', maxW: 8,    maxH: 8 },
-                { short: 'كم بارز (10 × 10 سم)',   label: 'كم بارز',       top: '41%', left: '53%', maxW: 10,   maxH: 10 },
-                { short: 'كم طولي (8 × 25 سم)',    label: 'كم طولي',       top: '48%', left: '53%', maxW: 8,    maxH: 25 }
-            ]
+        // مقاسات مخصصة لكل قطعة (التيشيرت يسمح بـ A3 في الصدر لعدم وجود جيب كنغر)
+        const productSizes = {
+            hoodie: {
+                front: [
+                    { short: 'شعار صدر (8 × 8 سم)',   label: 'شعار صدر',     top: '34%', left: '57%', maxW: 8,    maxH: 8 },
+                    { short: 'شعار بارز (10 × 10 سم)', label: 'شعار بارز',     top: '34%', left: '57%', maxW: 10,   maxH: 10 },
+                    { short: 'وسط الصدر (20 × 20 سم)', label: 'وسط الصدر',     top: '39%', left: '49%', maxW: 20,   maxH: 20 },
+                    { short: 'صدر عريض (25 × 10 سم)',  label: 'صدر عريض',      top: '36%', left: '49%', maxW: 25,   maxH: 10 },
+                    { short: 'A5 (14.8 × 21 سم)',      label: 'مقاس A5',       top: '40%', left: '49%', maxW: 14.8, maxH: 21 },
+                    { short: 'A4 (21 × 29.7 سم)',      label: 'مقاس A4',       top: '42%', left: '49%', maxW: 21,   maxH: 29.7 }
+                ],
+                back: [
+                    { short: 'أسفل القبعة (8 × 8 سم)',label: 'أسفل القبعة',   top: '32%', left: '49%', maxW: 8,    maxH: 8 },
+                    { short: 'A5 (14.8 × 21 سم)',      label: 'مقاس A5',       top: '42%', left: '49%', maxW: 14.8, maxH: 21 },
+                    { short: 'A4 (21 × 29.7 سم)',      label: 'مقاس A4',       top: '45%', left: '49%', maxW: 21,   maxH: 29.7 },
+                    { short: 'ظهر كبير (30 × 35 سم)',  label: 'ظهر كبير',      top: '47%', left: '49%', maxW: 30,   maxH: 35 },
+                    { short: 'A3 (29.7 × 42 سم)',      label: 'مقاس A3 كامل',  top: '49%', left: '49%', maxW: 29.7, maxH: 42 }
+                ],
+                side_right: [
+                    { short: 'شعار كم (8 × 8 سم)',     label: 'كم قياسي',      top: '41%', left: '44%', maxW: 8,    maxH: 8 },
+                    { short: 'كم بارز (10 × 10 سم)',   label: 'كم بارز',       top: '41%', left: '44%', maxW: 10,   maxH: 10 },
+                    { short: 'كم طولي (8 × 25 سم)',    label: 'كم طولي',       top: '48%', left: '44%', maxW: 8,    maxH: 25 }
+                ],
+                side_left: [
+                    { short: 'شعار كم (8 × 8 سم)',     label: 'كم قياسي',      top: '41%', left: '53%', maxW: 8,    maxH: 8 },
+                    { short: 'كم بارز (10 × 10 سم)',   label: 'كم بارز',       top: '41%', left: '53%', maxW: 10,   maxH: 10 },
+                    { short: 'كم طولي (8 × 25 سم)',    label: 'كم طولي',       top: '48%', left: '53%', maxW: 8,    maxH: 25 }
+                ]
+            },
+            tshirt: {
+                front: [
+                    { short: 'شعار صدر (8 × 8 سم)',   label: 'شعار صدر',     top: '36%', left: '58%', maxW: 8,    maxH: 8 },
+                    { short: 'وسط الصدر (20 × 20 سم)', label: 'وسط الصدر',     top: '43%', left: '50%', maxW: 20,   maxH: 20 },
+                    { short: 'A5 (14.8 × 21 سم)',      label: 'مقاس A5',       top: '44%', left: '50%', maxW: 14.8, maxH: 21 },
+                    { short: 'A4 (21 × 29.7 سم)',      label: 'مقاس A4',       top: '47%', left: '50%', maxW: 21,   maxH: 29.7 },
+                    { short: 'A3 صدر كامل (29.7×42)',  label: 'صدر كامل A3',   top: '51%', left: '50%', maxW: 29.7, maxH: 42 }
+                ],
+                back: [
+                    { short: 'أسفل الياقة (8 × 8 سم)', label: 'أسفل الياقة',   top: '27%', left: '50%', maxW: 8,    maxH: 8 },
+                    { short: 'A4 (21 × 29.7 سم)',      label: 'مقاس A4',       top: '46%', left: '50%', maxW: 21,   maxH: 29.7 },
+                    { short: 'ظهر كبير (30 × 35 سم)',  label: 'ظهر كبير',      top: '49%', left: '50%', maxW: 30,   maxH: 35 },
+                    { short: 'A3 (29.7 × 42 سم)',      label: 'مقاس A3 كامل',  top: '51%', left: '50%', maxW: 29.7, maxH: 42 }
+                ],
+                side_right: [
+                    { short: 'شعار كم (8 × 8 سم)',     label: 'كم قياسي',      top: '38%', left: '50%', maxW: 8,    maxH: 8 },
+                    { short: 'كم بارز (10 × 10 سم)',   label: 'كم بارز',       top: '38%', left: '50%', maxW: 10,   maxH: 10 }
+                ],
+                side_left: [
+                    { short: 'شعار كم (8 × 8 سم)',     label: 'كم قياسي',      top: '38%', left: '50%', maxW: 8,    maxH: 8 },
+                    { short: 'كم بارز (10 × 10 سم)',   label: 'كم بارز',       top: '38%', left: '50%', maxW: 10,   maxH: 10 }
+                ]
+            }
         };
+
+        // التطوير (3): فحص دقة الصورة DPI بالنسبة للمقاس بالسنتيمتر
+        function checkPrintDPI() {
+            const wInches = currentWcm / 2.54;
+            const hInches = currentHcm / 2.54;
+            const dpiW = designNaturalW / wInches;
+            const dpiH = designNaturalH / hInches;
+            const effectiveDpi = Math.round(Math.min(dpiW, dpiH));
+
+            const dot = document.getElementById('dpi-dot');
+            const txt = document.getElementById('dpi-text');
+
+            if (effectiveDpi >= 200) {
+                dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+                txt.innerText = `جودة التصميم: ممتازة للطباعة (${Math.min(300, effectiveDpi)} DPI)`;
+                txt.className = 'text-stone-200 font-semibold';
+            } else if (effectiveDpi >= 120) {
+                dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+                txt.innerText = `جودة متوسطة (${effectiveDpi} DPI) — مقبولة لطباعة DTF`;
+                txt.className = 'text-amber-300 font-semibold';
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-rose-500';
+                txt.innerText = `تنبيه: دقة الصورة منخفضة (${effectiveDpi} DPI) لهذا المقاس الكبير`;
+                txt.className = 'text-rose-300 font-semibold';
+            }
+        }
+
+        // التطوير (3): إزالة الخلفية البيضاء تلقائياً وتحويلها لشفافة
+        function toggleRemoveWhiteBg() {
+            const btn = document.getElementById('btn-remove-bg');
+            const txt = document.getElementById('bg-btn-text');
+            const printBox = document.getElementById('print-box');
+            const printImg = document.getElementById('print-img');
+
+            isBgRemoved = !isBgRemoved;
+
+            if (isBgRemoved) {
+                btn.classList.add('border-[#D4AF37]');
+                txt.classList.add('gold-accent');
+                txt.classList.remove('text-stone-300');
+                printBox.classList.add('transparent-bg');
+
+                const tempImg = new Image();
+                tempImg.onload = function() {
+                    const c = document.createElement('canvas');
+                    c.width = tempImg.naturalWidth;
+                    c.height = tempImg.naturalHeight;
+                    const ctx = c.getContext('2d');
+                    ctx.drawImage(tempImg, 0, 0);
+                    const imgData = ctx.getImageData(0, 0, c.width, c.height);
+                    const d = imgData.data;
+
+                    for (let i = 0; i < d.length; i += 4) {
+                        const r = d[i], g = d[i + 1], b = d[i + 2];
+                        // تحويل البكسلات البيضاء أو القريبة جداً من الأبيض إلى شفافة
+                        if (r > 235 && g > 235 && b > 235) {
+                            d[i + 3] = 0;
+                        }
+                    }
+                    ctx.putImageData(imgData, 0, 0);
+                    transparentDesignDataUrl = c.toDataURL('image/png');
+                    printImg.src = transparentDesignDataUrl;
+                };
+                tempImg.src = originalDesignDataUrl;
+            } else {
+                btn.classList.remove('border-[#D4AF37]');
+                txt.classList.remove('gold-accent');
+                txt.classList.add('text-stone-300');
+                printBox.classList.remove('transparent-bg');
+                printImg.src = originalDesignDataUrl;
+            }
+        }
+
+        function setProduct(prod) {
+            currentProduct = prod;
+            document.getElementById('prod-hoodie').classList.toggle('active', prod === 'hoodie');
+            document.getElementById('prod-hoodie').classList.toggle('text-stone-300', prod !== 'hoodie');
+            document.getElementById('prod-tshirt').classList.toggle('active', prod === 'tshirt');
+            document.getElementById('prod-tshirt').classList.toggle('text-stone-300', prod !== 'tshirt');
+
+            setAngle(currentAngle);
+        }
 
         function setPrintSelected(selected) {
             const printBox = document.getElementById('print-box');
@@ -392,6 +587,8 @@
 
             document.getElementById('input-w-cm').value = currentWcm;
             document.getElementById('input-h-cm').value = currentHcm;
+
+            checkPrintDPI();
         }
 
         function switchMode(mode) {
@@ -439,7 +636,7 @@
 
         function renderSizesButtons() {
             const grid = document.getElementById('sizes-grid');
-            const list = angleSizes[currentAngle];
+            const list = productSizes[currentProduct][currentAngle];
 
             grid.innerHTML = '';
             list.forEach((item, idx) => {
@@ -455,7 +652,7 @@
             currentSizeIndex = idx;
             customMoved = false;
             setPrintSelected(true);
-            const list = angleSizes[currentAngle];
+            const list = productSizes[currentProduct][currentAngle];
             const cfg = list[idx];
 
             document.querySelectorAll('.size-btn').forEach((b, i) => {
@@ -485,8 +682,14 @@
 
         function setAngle(ang) {
             currentAngle = ang;
-            const img = document.getElementById('hoodie-img');
-            img.src = imagesMap[ang];
+            const img = document.getElementById('garment-img');
+            img.onerror = function() {
+                if (currentProduct === 'tshirt') {
+                    img.onerror = null;
+                    img.src = generateTshirtFallback(ang);
+                }
+            };
+            img.src = productImages[currentProduct][ang];
 
             document.querySelectorAll('.angle-btn').forEach(b => {
                 b.classList.remove('active');
@@ -498,8 +701,8 @@
                 activeBtn.classList.remove('text-stone-300');
             }
 
-            currentSizeIndex = (ang === 'back') ? 4 : 0;
-            if (currentSizeIndex >= angleSizes[ang].length) currentSizeIndex = 0;
+            const list = productSizes[currentProduct][ang];
+            currentSizeIndex = (ang === 'back') ? list.length - 1 : 0;
 
             renderSizesButtons();
             selectSize(currentSizeIndex);
@@ -509,8 +712,8 @@
             setPrintSelected(true);
             const printBox = document.getElementById('print-box');
             printBox.classList.add('smooth-resize');
-            printBox.style.top = (currentAngle === 'back') ? '47%' : '40%';
-            printBox.style.left = (currentAngle === 'side_right') ? '44%' : (currentAngle === 'side_left') ? '53%' : '49%';
+            printBox.style.top = (currentAngle === 'back') ? '48%' : '42%';
+            printBox.style.left = (currentAngle === 'side_right') ? '45%' : (currentAngle === 'side_left') ? '52%' : '50%';
         }
 
         function setColor(hex, name, isDark, btn) {
@@ -534,8 +737,16 @@
                 const tempImg = new Image();
                 tempImg.onload = function() {
                     hasUserUploadedDesign = true;
-                    designAspectRatio = tempImg.naturalWidth / tempImg.naturalHeight;
-                    document.getElementById('print-img').src = e.target.result;
+                    designNaturalW = tempImg.naturalWidth;
+                    designNaturalH = tempImg.naturalHeight;
+                    designAspectRatio = designNaturalW / designNaturalH;
+                    originalDesignDataUrl = e.target.result;
+                    isBgRemoved = false;
+                    document.getElementById('btn-remove-bg').classList.remove('border-[#D4AF37]');
+                    document.getElementById('bg-btn-text').classList.remove('gold-accent');
+                    document.getElementById('print-box').classList.remove('transparent-bg');
+
+                    document.getElementById('print-img').src = originalDesignDataUrl;
                     setPrintSelected(true);
                     if (currentMode === 'presets') selectSize(currentSizeIndex);
                     else applyManualCm('w');
@@ -545,28 +756,47 @@
             reader.readAsDataURL(file);
         }
 
-        function saveDesignImage() {
+        // التطوير (5): توليد ورقة إنتاج متكاملة وجاهزة للمطبعة (Production Spec Sheet)
+        function saveProductionSheet() {
             const canvas = document.createElement('canvas');
-            const size = 1000;
-            const footerHeight = 110;
-            canvas.width = size;
-            canvas.height = size + footerHeight;
+            canvas.width = 1200;
+            canvas.height = 1360;
             const ctx = canvas.getContext('2d');
 
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // خلفية داكنة فاخرة
+            ctx.fillStyle = '#0d0d0d';
+            ctx.fillRect(0, 0, 1200, 1360);
 
-            const hoodieEl = document.getElementById('hoodie-img');
+            // ترويسة ملف الإنتاج
+            ctx.fillStyle = '#181615';
+            ctx.fillRect(0, 0, 1200, 110);
+            ctx.strokeStyle = '#D4AF37';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(0, 110); ctx.lineTo(1200, 110); ctx.stroke();
+
+            ctx.fillStyle = '#D4AF37';
+            ctx.font = 'bold 34px Cairo, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('عِزوة | ورقة مواصفات الإنتاج والطباعة (Production Sheet)', 1160, 68);
+
+            // القسم الأيمن: معاينة القطعة بالكامل (750 × 750)
+            const garmentEl = document.getElementById('garment-img');
             const printEl = document.getElementById('print-img');
             const printBox = document.getElementById('print-box');
 
-            ctx.drawImage(hoodieEl, 0, 0, size, size);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(420, 140, 740, 740);
+            ctx.strokeStyle = 'rgba(212,175,55,0.4)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(420, 140, 740, 740);
+
+            ctx.drawImage(garmentEl, 420, 140, 740, 740);
 
             if (currentColorHex !== 'transparent') {
                 ctx.save();
                 ctx.globalCompositeOperation = 'multiply';
                 ctx.fillStyle = currentColorHex;
-                ctx.fillRect(0, 0, size, size);
+                ctx.fillRect(420, 140, 740, 740);
                 ctx.restore();
             }
 
@@ -575,48 +805,88 @@
             const wPct = parseFloat(printBox.style.width) / 100;
             const hPct = parseFloat(printBox.style.height) / 100;
 
-            const drawW = wPct * size;
-            const drawH = hPct * size;
-            const drawX = (leftPct * size) - (drawW / 2);
-            const drawY = (topPct * size) - (drawH / 2);
+            const drawW = wPct * 740;
+            const drawH = hPct * 740;
+            const drawX = 420 + (leftPct * 740) - (drawW / 2);
+            const drawY = 140 + (topPct * 740) - (drawH / 2);
 
             ctx.save();
-            if (currentColorHex === 'transparent' || currentColorHex === '#d8cab3') {
+            if (!isBgRemoved && (currentColorHex === 'transparent' || currentColorHex === '#d8cab3')) {
                 ctx.globalCompositeOperation = 'multiply';
             }
             ctx.drawImage(printEl, drawX, drawY, drawW, drawH);
             ctx.restore();
 
+            // القسم الأيسر: نافذة معاينة ملف الطباعة الصافي (350 × 350)
             ctx.fillStyle = '#181615';
-            ctx.fillRect(0, size, size, footerHeight);
-            ctx.strokeStyle = '#D4AF37';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(0, size);
-            ctx.lineTo(size, size);
-            ctx.stroke();
+            ctx.fillRect(40, 140, 350, 420);
+            ctx.strokeStyle = 'rgba(212,175,55,0.4)';
+            ctx.strokeRect(40, 140, 350, 420);
 
             ctx.fillStyle = '#D4AF37';
-            ctx.font = 'bold 30px Cairo, sans-serif';
+            ctx.font = 'bold 20px Cairo, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('ملف الطباعة الصافي (Artwork)', 215, 180);
+
+            // رسم التصميم الصافي متناسباً داخل المربع
+            const boxSize = 270;
+            let artW = boxSize, artH = boxSize;
+            if (designAspectRatio >= 1) artH = boxSize / designAspectRatio;
+            else artW = boxSize * designAspectRatio;
+            ctx.drawImage(printEl, 40 + (350 - artW) / 2, 210 + (300 - artH) / 2, artW, artH);
+
+            // بطاقة الحالة التقنية أسفل الملف الصافي
+            ctx.fillStyle = '#181615';
+            ctx.fillRect(40, 580, 350, 300);
+            ctx.strokeRect(40, 580, 350, 300);
             ctx.textAlign = 'right';
-            ctx.fillText(`عِزوة | الجهة: ${angleNames[currentAngle]} — اللون: ${currentColorName}`, size - 35, size + 45);
+            ctx.fillStyle = '#D4AF37';
+            ctx.font = 'bold 20px Cairo, sans-serif';
+            ctx.fillText('حالة الملف التقنية:', 365, 625);
+
+            ctx.fillStyle = '#e5e5e5';
+            ctx.font = '18px Cairo, sans-serif';
+            ctx.fillText(`• تفريغ الخلفية: ${isBgRemoved ? 'مفعل (شفاف)' : 'أصلي'}`, 365, 670);
+            ctx.fillText(`• الدقة: ${document.getElementById('dpi-text').innerText.split('(')[1]?.replace(')', '') || '300 DPI'}`, 365, 710);
+            ctx.fillText(`• نوع الطباعة: DTF عالي الثبات`, 365, 750);
+            ctx.fillText(`• الموضع: ${customMoved ? 'مخصص يدوياً' : 'قياسي موزون'}`, 365, 790);
+
+            // جدول المواصفات السفلي للمطبعة
+            ctx.fillStyle = '#181615';
+            ctx.fillRect(40, 910, 1120, 410);
+            ctx.strokeStyle = '#D4AF37';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(40, 910, 1120, 410);
+
+            ctx.fillStyle = '#D4AF37';
+            ctx.font = 'bold 28px Cairo, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('بيانات التنفيذ المعتمدة:', 1120, 965);
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 28px Cairo, sans-serif';
-            ctx.fillText(`مقاس الطباعة المعتمد: ${currentWcm} × ${currentHcm} سم`, size - 35, size + 88);
+            ctx.font = 'bold 26px Cairo, sans-serif';
+            ctx.fillText(`1. القطعة: ${productNames[currentProduct]}`, 1120, 1030);
+            ctx.fillText(`2. لون القماش: ${currentColorName}`, 1120, 1090);
+            ctx.fillText(`3. جهة الطباعة: ${angleNames[currentAngle]}`, 1120, 1150);
+
+            ctx.fillStyle = '#D4AF37';
+            ctx.font = 'bold 32px Cairo, sans-serif';
+            ctx.fillText(`4. المقاس الفعلي للتنفيذ: ${currentWcm} × ${currentHcm} سم`, 1120, 1225);
 
             const link = document.createElement('a');
-            link.download = `EZWA-Hoodie-${currentAngle}-${currentWcm}x${currentHcm}cm.png`;
+            link.download = `EZWA-Production-${currentProduct}-${currentAngle}-${currentWcm}x${currentHcm}cm.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
 
         function orderWhatsApp() {
             const faceName = angleNames[currentAngle];
-            const cfg = angleSizes[currentAngle][currentSizeIndex];
+            const prodName = productNames[currentProduct];
+            const cfg = productSizes[currentProduct][currentAngle][currentSizeIndex];
             const modeText = currentMode === 'free' ? 'مقاس حر مخصص' : `${cfg.short}`;
             const posNote = customMoved ? ' (موضع مخصص)' : '';
-            const text = `السلام عليكم، اعتمدت مقاس الطباعة على الهودي في المحاكي:\n- القطعة: هودي أوفر سايز\n- اللون: ${currentColorName}\n- الجهة: ${faceName}${posNote}\n- المقاس: ${modeText}\n- الأبعاد الدقيقة: ${currentWcm} × ${currentHcm} سم`;
+            const bgNote = isBgRemoved ? ' (مع تفريغ الخلفية)' : '';
+            const text = `السلام عليكم، اعتمدت طلب الطباعة في الاستوديو:\n- القطعة: ${prodName}\n- اللون: ${currentColorName}\n- الجهة: ${faceName}${posNote}\n- المقاس: ${modeText}\n- الأبعاد الدقيقة: ${currentWcm} × ${currentHcm} سم${bgNote}`;
             const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
