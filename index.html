@@ -12,6 +12,7 @@
             background-color: #0d0d0d;
             color: #f5f5f4;
             margin: 0;
+            height: 100dvh;
             overflow: hidden;
             user-select: none;
             touch-action: none;
@@ -43,10 +44,10 @@
 
         .mockup-stage {
             position: relative;
-            width: min(84vw, 390px);
-            height: min(46vh, 380px);
+            width: min(80vw, 350px);
+            height: min(44dvh, 350px);
             overflow: hidden;
-            border-radius: 24px;
+            border-radius: 22px;
             border: 1px solid rgba(212, 175, 55, 0.15);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
             background-color: #000000;
@@ -65,6 +66,26 @@
             pointer-events: none;
             transition: background-color 0.3s ease;
         }
+
+        /* إطار الورقة القياسية (A3 / A4 / A5) لتوضيح حدود مساحة الطباعة الحقيقية */
+        .paper-guide {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            border: 1px dashed rgba(255, 255, 255, 0.28);
+            background-color: rgba(255, 255, 255, 0.03);
+            pointer-events: none;
+            transition: all 0.25s ease;
+            border-radius: 3px;
+        }
+        .paper-guide-tag {
+            position: absolute;
+            bottom: -16px;
+            right: 4px;
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.55);
+            direction: ltr;
+        }
+
         .print-layer {
             position: absolute;
             transform: translate(-50%, -50%);
@@ -73,15 +94,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px dashed rgba(212, 175, 55, 0.65);
+            border: 1.5px dashed rgba(212, 175, 55, 0.75);
             border-radius: 2px;
+            z-index: 10;
         }
         .print-layer.smooth-resize {
             transition: width 0.25s ease, height 0.25s ease, top 0.25s ease, left 0.25s ease;
         }
         .print-layer:hover, .print-layer.dragging {
             border: 1.5px solid #D4AF37;
-            background-color: rgba(212, 175, 55, 0.08);
+            background-color: rgba(212, 175, 55, 0.1);
         }
         .print-layer.on-dark {
             mix-blend-mode: normal;
@@ -90,8 +112,8 @@
 
         .resize-handle {
             position: absolute;
-            width: 14px;
-            height: 14px;
+            width: 13px;
+            height: 13px;
             background-color: #D4AF37;
             border: 2px solid #121212;
             border-radius: 50%;
@@ -103,22 +125,22 @@
             transform: scale(1.3);
             background-color: #ffffff;
         }
-        .handle-nw { top: -7px; left: -7px; cursor: nwse-resize; }
-        .handle-ne { top: -7px; right: -7px; cursor: nesw-resize; }
-        .handle-sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
-        .handle-se { bottom: -7px; right: -7px; cursor: nwse-resize; }
+        .handle-nw { top: -6.5px; left: -6.5px; cursor: nwse-resize; }
+        .handle-ne { top: -6.5px; right: -6.5px; cursor: nesw-resize; }
+        .handle-sw { bottom: -6.5px; left: -6.5px; cursor: nesw-resize; }
+        .handle-se { bottom: -6.5px; right: -6.5px; cursor: nwse-resize; }
 
         .live-cm-badge {
             position: absolute;
-            top: -26px;
+            top: -23px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(18, 18, 18, 0.92);
+            background: rgba(18, 18, 18, 0.94);
             color: #D4AF37;
-            border: 1px solid rgba(212, 175, 55, 0.5);
-            padding: 1px 6px;
-            border-radius: 6px;
-            font-size: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.6);
+            padding: 0px 6px;
+            border-radius: 5px;
+            font-size: 9.5px;
             font-weight: 700;
             white-space: nowrap;
             pointer-events: none;
@@ -126,15 +148,15 @@
         }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col justify-between items-center relative">
+<body class="w-screen flex flex-col justify-between items-center relative">
 
     <!-- الشريط العلوي -->
-    <header class="w-full p-3 flex justify-between items-center z-20">
-        <div class="glass-panel px-3 py-1.5 rounded-xl flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-lg gold-bg flex items-center justify-center font-black text-sm">عِزوة</div>
+    <header class="w-full px-3 pt-2.5 pb-1 flex justify-between items-center z-20 shrink-0">
+        <div class="glass-panel px-3 py-1 rounded-xl flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg gold-bg flex items-center justify-center font-black text-xs">عِزوة</div>
             <div>
-                <h1 class="text-xs sm:text-sm font-bold text-white leading-tight">محاكي مقاسات المطابع</h1>
-                <p class="text-[10px] text-stone-400">مقاسات قياسية مع حفظ التناسب</p>
+                <h1 class="text-xs font-bold text-white leading-tight">محاكي مقاسات المطابع</h1>
+                <p class="text-[9.5px] text-stone-400">مقياس رسم حقيقي 1:1</p>
             </div>
         </div>
 
@@ -147,49 +169,54 @@
     </header>
 
     <!-- منطقة العرض الوسطى -->
-    <main class="flex-1 flex items-center justify-center w-full relative z-10 px-4">
+    <main class="flex-1 flex items-center justify-center w-full relative z-10 px-4 min-h-0">
         <div id="stage" class="mockup-stage cursor-grab active:cursor-grabbing">
             <img id="hoodie-img" src="front.jpg.jpg" alt="هودي" class="hoodie-img">
             <div id="color-tint" class="color-overlay" style="background-color: transparent;"></div>
             
-            <div id="print-box" class="print-layer smooth-resize" style="top: 34%; left: 58%; width: 6.88%; height: 6.88%;">
+            <!-- إطار حدود الورقة القياسية (يوضح مقاس A3 / A4 / A5 الكامل) -->
+            <div id="paper-guide" class="paper-guide" style="top: 34%; left: 58%; width: 9.2%; height: 9.2%;">
+                <span id="paper-guide-tag" class="paper-guide-tag">8×8 cm</span>
+            </div>
+
+            <!-- صندوق التصميم الفعلي -->
+            <div id="print-box" class="print-layer smooth-resize" style="top: 34%; left: 58%; width: 9.2%; height: 9.2%;">
                 <div id="live-badge" class="live-cm-badge">8.0 × 8.0 cm</div>
                 <img id="print-img" src="" alt="التصميم" class="w-full h-full object-contain pointer-events-none">
                 
-                <div class="resize-handle handle-nw" data-corner="nw" title="اسحب لتغيير المقاس"></div>
-                <div class="resize-handle handle-ne" data-corner="ne" title="اسحب لتغيير المقاس"></div>
-                <div class="resize-handle handle-sw" data-corner="sw" title="اسحب لتغيير المقاس"></div>
-                <div class="resize-handle handle-se" data-corner="se" title="اسحب لتغيير المقاس"></div>
+                <div class="resize-handle handle-nw" data-corner="nw"></div>
+                <div class="resize-handle handle-ne" data-corner="ne"></div>
+                <div class="resize-handle handle-sw" data-corner="sw"></div>
+                <div class="resize-handle handle-se" data-corner="se"></div>
             </div>
         </div>
 
-        <!-- أدوات التحكم الجانبية (الألوان، رفع التصميم، التوسيط، وقفل التناسب) -->
-        <div class="fixed left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2">
-            <div class="glass-panel p-2 rounded-xl flex flex-col items-center gap-2">
+        <!-- أدوات التحكم الجانبية -->
+        <div class="fixed left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1.5">
+            <div class="glass-panel p-1.5 rounded-xl flex flex-col items-center gap-1.5">
                 <span class="text-[9px] text-stone-400">اللون</span>
-                <button onclick="setColor('transparent', 'أبيض', false, this)" class="color-dot active w-6 h-6 rounded-full bg-[#ffffff] border border-stone-500 transition" title="أبيض"></button>
-                <button onclick="setColor('#262629', 'أسود مطفي', true, this)" class="color-dot w-6 h-6 rounded-full bg-[#18181b] border border-stone-500 transition" title="أسود"></button>
-                <button onclick="setColor('#5e192c', 'عنابي داكن', true, this)" class="color-dot w-6 h-6 rounded-full bg-[#4a1525] border border-stone-500 transition" title="عنابي"></button>
-                <button onclick="setColor('#d8cab3', 'بيج رملي', false, this)" class="color-dot w-6 h-6 rounded-full bg-[#d6cbb8] border border-stone-500 transition" title="بيج"></button>
-                <button onclick="setColor('#3b473c', 'زيتي داكن', true, this)" class="color-dot w-6 h-6 rounded-full bg-[#2d362e] border border-stone-500 transition" title="زيتي"></button>
+                <button onclick="setColor('transparent', 'أبيض', false, this)" class="color-dot active w-5 h-5 rounded-full bg-[#ffffff] border border-stone-500 transition" title="أبيض"></button>
+                <button onclick="setColor('#262629', 'أسود مطفي', true, this)" class="color-dot w-5 h-5 rounded-full bg-[#18181b] border border-stone-500 transition" title="أسود"></button>
+                <button onclick="setColor('#5e192c', 'عنابي داكن', true, this)" class="color-dot w-5 h-5 rounded-full bg-[#4a1525] border border-stone-500 transition" title="عنابي"></button>
+                <button onclick="setColor('#d8cab3', 'بيج رملي', false, this)" class="color-dot w-5 h-5 rounded-full bg-[#d6cbb8] border border-stone-500 transition" title="بيج"></button>
+                <button onclick="setColor('#3b473c', 'زيتي داكن', true, this)" class="color-dot w-5 h-5 rounded-full bg-[#2d362e] border border-stone-500 transition" title="زيتي"></button>
             </div>
 
-            <label class="glass-panel p-2 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#D4AF37] transition text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 gold-accent mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <label class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#D4AF37] transition text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 gold-accent mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                <span class="text-[9px] font-bold text-white leading-tight">ارفع<br>تصميمك</span>
+                <span class="text-[8.5px] font-bold text-white leading-tight">ارفع<br>تصميمك</span>
                 <input type="file" accept="image/*" class="hidden" onchange="uploadDesign(event)">
             </label>
 
-            <!-- زر قفل/فتح النسبة والتناسب -->
-            <button id="btn-lock-ratio" onclick="toggleRatioLock()" class="glass-panel p-2 rounded-xl flex flex-col items-center justify-center border-[#D4AF37] transition text-center" title="قفل النسبة والتناسب لحماية التصميم">
-                <span id="lock-icon" class="text-xs mb-0.5">🔒</span>
+            <button id="btn-lock-ratio" onclick="toggleRatioLock()" class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center border-[#D4AF37] transition text-center">
+                <span id="lock-icon" class="text-[11px]">🔒</span>
                 <span id="lock-text" class="text-[8px] font-bold gold-accent leading-tight">تناسب<br>مقفل</span>
             </button>
 
-            <button onclick="resetPosition()" class="glass-panel p-2 rounded-xl flex flex-col items-center justify-center hover:border-[#D4AF37] transition text-center" title="توسيط التصميم">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 gold-accent mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button onclick="resetPosition()" class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center hover:border-[#D4AF37] transition text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 gold-accent mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
                 <span class="text-[8px] font-bold text-stone-300">توسيط</span>
@@ -197,55 +224,55 @@
         </div>
     </main>
 
-    <!-- الشريط السفلي -->
-    <footer class="w-full p-2.5 z-20">
-        <div class="max-w-2xl mx-auto glass-panel rounded-2xl p-3 shadow-2xl">
+    <!-- الشريط السفلي المدمج بدون أي قص -->
+    <footer class="w-full px-3 pb-2.5 pt-1 z-20 shrink-0">
+        <div class="max-w-2xl mx-auto glass-panel rounded-2xl p-2.5 shadow-2xl">
             
-            <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+            <div class="flex flex-wrap justify-between items-center gap-1.5 mb-1.5">
                 <div class="flex bg-black/50 p-0.5 rounded-xl border border-stone-800">
                     <button id="tab-presets" onclick="switchMode('presets')" class="mode-btn active px-2.5 py-1 rounded-lg text-[11px] transition">مقاسات المطابع</button>
                     <button id="tab-free" onclick="switchMode('free')" class="mode-btn px-2.5 py-1 rounded-lg text-[11px] text-stone-300 transition">مقاس حر (سحب الزوايا)</button>
                 </div>
 
                 <div class="flex items-center gap-1.5">
-                    <span class="text-[11px] text-stone-400">المقاس المعتمد:</span>
-                    <span id="size-label" class="text-xs gold-accent font-bold" dir="ltr">8.0 × 8.0 cm</span>
+                    <span class="text-[10px] text-stone-400">صافي التصميم:</span>
+                    <span id="size-label" class="text-[11px] gold-accent font-bold" dir="ltr">8.0 × 8.0 cm</span>
                 </div>
             </div>
 
             <!-- المقاسات القياسية للمطابع -->
             <div id="presets-panel">
-                <div id="sizes-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mb-2.5"></div>
+                <div id="sizes-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mb-2"></div>
             </div>
 
             <!-- لوحة المقاس الحر -->
-            <div id="free-panel" class="hidden mb-2.5 bg-black/40 p-2.5 rounded-xl border border-stone-800">
+            <div id="free-panel" class="hidden mb-2 bg-black/40 p-2 rounded-xl border border-stone-800">
                 <div class="flex items-center justify-between gap-2 flex-wrap">
-                    <p class="text-[11px] text-stone-300">اسحب زوايا التصميم أو أدخل البُعد بالسنتيمتر:</p>
+                    <p class="text-[10.5px] text-stone-300">اسحب زوايا التصميم أو أدخل المقاس بالسنتيمتر:</p>
                     <div class="flex items-center gap-2" dir="ltr">
                         <div class="flex items-center gap-1">
-                            <input id="input-w-cm" type="number" step="0.5" min="2" max="35" value="8" onchange="applyManualCm('w')" class="w-14 bg-stone-900 border border-stone-700 rounded-lg px-2 py-1 text-center text-xs text-white focus:border-[#D4AF37] outline-none">
+                            <input id="input-w-cm" type="number" step="0.5" min="2" max="35" value="8" onchange="applyManualCm('w')" class="w-14 bg-stone-900 border border-stone-700 rounded-lg px-1.5 py-1 text-center text-xs text-white focus:border-[#D4AF37] outline-none">
                             <span class="text-[10px] text-stone-400">W</span>
                         </div>
                         <span class="text-stone-500 text-xs">×</span>
                         <div class="flex items-center gap-1">
-                            <input id="input-h-cm" type="number" step="0.5" min="2" max="45" value="8" onchange="applyManualCm('h')" class="w-14 bg-stone-900 border border-stone-700 rounded-lg px-2 py-1 text-center text-xs text-white focus:border-[#D4AF37] outline-none">
+                            <input id="input-h-cm" type="number" step="0.5" min="2" max="45" value="8" onchange="applyManualCm('h')" class="w-14 bg-stone-900 border border-stone-700 rounded-lg px-1.5 py-1 text-center text-xs text-white focus:border-[#D4AF37] outline-none">
                             <span class="text-[10px] text-stone-400">H (cm)</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- أزرار الإجراءات: حفظ التصميم كصورة + إرسال واتساب -->
+            <!-- أزرار الإجراءات: حفظ الصورة + إرسال واتساب -->
             <div class="grid grid-cols-3 gap-2">
-                <button onclick="saveDesignImage()" class="col-span-1 py-2.5 px-2 rounded-xl bg-stone-800 border border-[#D4AF37]/50 text-[#D4AF37] font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-stone-700 transition">
+                <button onclick="saveDesignImage()" class="col-span-1 py-2 px-2 rounded-xl bg-stone-800 border border-[#D4AF37]/50 text-[#D4AF37] font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-stone-700 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     <span>حفظ الصورة</span>
                 </button>
 
-                <button onclick="orderWhatsApp()" class="col-span-2 py-2.5 px-3 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
+                <button onclick="orderWhatsApp()" class="col-span-2 py-2 px-3 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
                     <span>اعتماد المقاس والطلب عبر واتساب</span>
                 </button>
             </div>
@@ -253,8 +280,8 @@
     </footer>
 
     <script>
-        let designAspectRatio = 1.0; // نسبة العرض إلى الارتفاع للتصميم المرفوع
-        let lockAspectRatio = true;  // قفل التناسب افتراضياً لحماية التصميم من التمطيط
+        let designAspectRatio = 1.0;
+        let lockAspectRatio = true;
 
         function initDefaultLogo() {
             const c = document.createElement('canvas');
@@ -286,8 +313,8 @@
         let currentWcm = 8.0;
         let currentHcm = 8.0;
 
-        // مقياس الرسم الهندسي للهودي الأوفر سايز (1 سم = 0.86% من عرض الإطار)
-        const CM_TO_PERCENT = 0.86;
+        // مقياس رسم واقعي يطابق حجم الهودي الفعلي (1 سم = 1.15% من الإطار)
+        const CM_TO_PERCENT = 1.15;
 
         const imagesMap = {
             front:      'front.jpg.jpg',
@@ -303,32 +330,31 @@
             side_left:  'الكم الأيسر'
         };
 
-        // المقاسات القياسية المعترف بها عند جميع المطابع (مع حفظ التناسب)
         const angleSizes = {
             front: [
-                { short: 'شعار صدر (8 سم)',       label: 'شعار صدر قياسي',    top: '34%', left: '58%', maxW: 8,    maxH: 8,    fixedBox: false },
-                { short: 'شعار بارز (10 سم)',     label: 'شعار صدر بارز',      top: '34%', left: '58%', maxW: 10,   maxH: 10,   fixedBox: false },
-                { short: 'وسط الصدر (20 سم)',     label: 'وسط الصدر القياسي',  top: '39%', left: '49%', maxW: 20,   maxH: 20,   fixedBox: false },
-                { short: 'صدر عريض (25×10 سم)',   label: 'صدر عريض أفقي',     top: '36%', left: '49%', maxW: 25,   maxH: 10,   fixedBox: true },
-                { short: 'A5 (14.8 × 21 سم)',     label: 'مقاس A5 القياسي',    top: '40%', left: '49%', maxW: 14.8, maxH: 21,   fixedBox: false },
-                { short: 'A4 (21 × 29.7 سم)',     label: 'مقاس A4 الأقصى',     top: '43%', left: '49%', maxW: 21,   maxH: 29.7, fixedBox: false }
+                { short: 'شعار صدر (8 سم)',       label: 'شعار صدر',     top: '34%', left: '58%', maxW: 8,    maxH: 8,    fixedBox: false },
+                { short: 'شعار بارز (10 سم)',     label: 'شعار بارز',     top: '34%', left: '58%', maxW: 10,   maxH: 10,   fixedBox: false },
+                { short: 'وسط الصدر (20 سم)',     label: 'وسط الصدر',     top: '39%', left: '49%', maxW: 20,   maxH: 20,   fixedBox: false },
+                { short: 'صدر عريض (25×10 سم)',   label: 'صدر عريض',      top: '36%', left: '49%', maxW: 25,   maxH: 10,   fixedBox: true },
+                { short: 'A5 (14.8 × 21 سم)',     label: 'ورقة A5',       top: '40%', left: '49%', maxW: 14.8, maxH: 21,   fixedBox: false },
+                { short: 'A4 (21 × 29.7 سم)',     label: 'ورقة A4',       top: '43%', left: '49%', maxW: 21,   maxH: 29.7, fixedBox: false }
             ],
             back: [
-                { short: 'أسفل القبعة (8 سم)',    label: 'شعار أسفل القبعة',   top: '34%', left: '49%', maxW: 8,    maxH: 8,    fixedBox: false },
-                { short: 'A5 (14.8 × 21 سم)',     label: 'ظهر متوسط A5',       top: '43%', left: '49%', maxW: 14.8, maxH: 21,   fixedBox: false },
-                { short: 'A4 (21 × 29.7 سم)',     label: 'وسط الظهر A4',       top: '47%', left: '49%', maxW: 21,   maxH: 29.7, fixedBox: false },
-                { short: 'ظهر كبير (30 × 35 سم)', label: 'ظهر كبير قياسي',     top: '50%', left: '49%', maxW: 30,   maxH: 35,   fixedBox: false },
-                { short: 'A3 (29.7 × 42 سم)',     label: 'ظهر كامل A3',        top: '53%', left: '49%', maxW: 29.7, maxH: 42,   fixedBox: false }
+                { short: 'أسفل القبعة (8 سم)',    label: 'أسفل القبعة',   top: '33%', left: '49%', maxW: 8,    maxH: 8,    fixedBox: false },
+                { short: 'A5 (14.8 × 21 سم)',     label: 'ورقة A5',       top: '44%', left: '49%', maxW: 14.8, maxH: 21,   fixedBox: false },
+                { short: 'A4 (21 × 29.7 سم)',     label: 'ورقة A4',       top: '48%', left: '49%', maxW: 21,   maxH: 29.7, fixedBox: false },
+                { short: 'ظهر كبير (30 × 35 سم)', label: 'ظهر كبير',      top: '51%', left: '49%', maxW: 30,   maxH: 35,   fixedBox: false },
+                { short: 'A3 (29.7 × 42 سم)',     label: 'ورقة A3 كاملة', top: '53%', left: '49%', maxW: 29.7, maxH: 42,   fixedBox: false }
             ],
             side_right: [
-                { short: 'شعار كم (8 سم)',        label: 'كم أيمن قياسي',      top: '42%', left: '44%', maxW: 8,    maxH: 8,    fixedBox: false },
-                { short: 'كم بارز (10 سم)',       label: 'كم أيمن بارز',       top: '42%', left: '44%', maxW: 10,   maxH: 10,   fixedBox: false },
-                { short: 'كم طولي (8 × 25 سم)',   label: 'كم أيمن طولي',       top: '49%', left: '44%', maxW: 8,    maxH: 25,   fixedBox: true }
+                { short: 'شعار كم (8 سم)',        label: 'كم قياسي',      top: '42%', left: '44%', maxW: 8,    maxH: 8,    fixedBox: false },
+                { short: 'كم بارز (10 سم)',       label: 'كم بارز',       top: '42%', left: '44%', maxW: 10,   maxH: 10,   fixedBox: false },
+                { short: 'كم طولي (8 × 25 سم)',   label: 'كم طولي',       top: '49%', left: '44%', maxW: 8,    maxH: 25,   fixedBox: true }
             ],
             side_left: [
-                { short: 'شعار كم (8 سم)',        label: 'كم أيسر قياسي',      top: '42%', left: '53%', maxW: 8,    maxH: 8,    fixedBox: false },
-                { short: 'كم بارز (10 سم)',       label: 'كم أيسر بارز',       top: '42%', left: '53%', maxW: 10,   maxH: 10,   fixedBox: false },
-                { short: 'كم طولي (8 × 25 سم)',   label: 'كم أيسر طولي',       top: '49%', left: '53%', maxW: 8,    maxH: 25,   fixedBox: true }
+                { short: 'شعار كم (8 سم)',        label: 'كم قياسي',      top: '42%', left: '53%', maxW: 8,    maxH: 8,    fixedBox: false },
+                { short: 'كم بارز (10 سم)',       label: 'كم بارز',       top: '42%', left: '53%', maxW: 10,   maxH: 10,   fixedBox: false },
+                { short: 'كم طولي (8 × 25 سم)',   label: 'كم طولي',       top: '49%', left: '53%', maxW: 8,    maxH: 25,   fixedBox: true }
             ]
         };
 
@@ -344,18 +370,19 @@
                 text.innerHTML = 'تناسب<br>مقفل';
                 text.classList.add('gold-accent');
                 text.classList.remove('text-stone-400');
-                // إعادة ضبط الارتفاع ليتناسب مع العرض الحالي
-                updateDimensionsUI(currentWcm, currentWcm / designAspectRatio, 'تناسب محفوظ');
+                if (currentMode === 'presets') selectSize(currentSizeIndex);
+                else applyManualCm('w');
             } else {
                 btn.classList.remove('border-[#D4AF37]');
                 icon.innerText = '🔓';
                 text.innerHTML = 'تناسب<br>حر';
                 text.classList.remove('gold-accent');
                 text.classList.add('text-stone-400');
+                if (currentMode === 'presets') selectSize(currentSizeIndex);
             }
         }
 
-        function updateDimensionsUI(wCm, hCm, labelPrefix = '') {
+        function updateDimensionsUI(wCm, hCm, paperLabel = '') {
             currentWcm = Math.round(wCm * 10) / 10;
             currentHcm = Math.round(hCm * 10) / 10;
 
@@ -365,7 +392,7 @@
 
             const textCm = `${currentWcm} × ${currentHcm} cm`;
             document.getElementById('live-badge').innerText = textCm;
-            document.getElementById('size-label').innerText = labelPrefix ? `${labelPrefix} (${textCm})` : textCm;
+            document.getElementById('size-label').innerText = paperLabel ? `${paperLabel} | صافي: ${textCm}` : textCm;
 
             document.getElementById('input-w-cm').value = currentWcm;
             document.getElementById('input-h-cm').value = currentHcm;
@@ -377,6 +404,7 @@
             const tabFree = document.getElementById('tab-free');
             const panelPresets = document.getElementById('presets-panel');
             const panelFree = document.getElementById('free-panel');
+            const paperGuide = document.getElementById('paper-guide');
 
             if (mode === 'presets') {
                 tabPresets.classList.add('active');
@@ -385,6 +413,8 @@
                 tabFree.classList.add('text-stone-300');
                 panelPresets.classList.remove('hidden');
                 panelFree.classList.add('hidden');
+                paperGuide.style.opacity = '1';
+                selectSize(currentSizeIndex);
             } else {
                 tabFree.classList.add('active');
                 tabFree.classList.remove('text-stone-300');
@@ -392,6 +422,7 @@
                 tabPresets.classList.add('text-stone-300');
                 panelFree.classList.remove('hidden');
                 panelPresets.classList.add('hidden');
+                paperGuide.style.opacity = '0';
                 updateDimensionsUI(currentWcm, currentHcm, 'مقاس حر');
             }
         }
@@ -401,11 +432,8 @@
             let h = parseFloat(document.getElementById('input-h-cm').value) || 8;
 
             if (lockAspectRatio) {
-                if (changedAxis === 'w') {
-                    h = w / designAspectRatio;
-                } else {
-                    w = h * designAspectRatio;
-                }
+                if (changedAxis === 'w') h = w / designAspectRatio;
+                else w = h * designAspectRatio;
             }
 
             w = Math.max(2, Math.min(35, w));
@@ -438,12 +466,21 @@
                 b.classList.toggle('active', i === idx);
             });
 
+            // 1. رسم إطار الورقة القياسية الكامل (مثل A3 = 29.7 × 42 cm)
+            const paperGuide = document.getElementById('paper-guide');
+            paperGuide.style.opacity = '1';
+            paperGuide.style.top = cfg.top;
+            paperGuide.style.left = cfg.left;
+            paperGuide.style.width = (cfg.maxW * CM_TO_PERCENT) + '%';
+            paperGuide.style.height = (cfg.maxH * CM_TO_PERCENT) + '%';
+            document.getElementById('paper-guide-tag').innerText = `${cfg.label} (${cfg.maxW}×${cfg.maxH} cm)`;
+
+            // 2. وضع التصميم داخل إطار الورقة مع حفظ التناسب الحقيقي للصورة
             const printBox = document.getElementById('print-box');
             printBox.classList.add('smooth-resize');
             printBox.style.top = cfg.top;
             printBox.style.left = cfg.left;
 
-            // حساب الأبعاد مع احترام النسبة والتناسب لصورة العميل داخل حدود المقاس القياسي
             let finalW = cfg.maxW;
             let finalH = cfg.maxH;
 
@@ -475,7 +512,7 @@
                 activeBtn.classList.remove('text-stone-300');
             }
 
-            currentSizeIndex = (ang === 'back') ? 3 : 0;
+            currentSizeIndex = (ang === 'back') ? 4 : 0;
             if (currentSizeIndex >= angleSizes[ang].length) currentSizeIndex = 0;
 
             renderSizesButtons();
@@ -484,9 +521,14 @@
 
         function resetPosition() {
             const printBox = document.getElementById('print-box');
+            const paperGuide = document.getElementById('paper-guide');
             printBox.classList.add('smooth-resize');
-            printBox.style.top = (currentAngle === 'back') ? '47%' : '40%';
-            printBox.style.left = (currentAngle === 'side_right') ? '44%' : (currentAngle === 'side_left') ? '53%' : '49%';
+            const topPos = (currentAngle === 'back') ? '48%' : '40%';
+            const leftPos = (currentAngle === 'side_right') ? '44%' : (currentAngle === 'side_left') ? '53%' : '49%';
+            printBox.style.top = topPos;
+            printBox.style.left = leftPos;
+            paperGuide.style.top = topPos;
+            paperGuide.style.left = leftPos;
         }
 
         function setColor(hex, name, isDark, btn) {
@@ -495,11 +537,8 @@
             document.getElementById('color-tint').style.backgroundColor = hex;
             
             const printBox = document.getElementById('print-box');
-            if (isDark) {
-                printBox.classList.add('on-dark');
-            } else {
-                printBox.classList.remove('on-dark');
-            }
+            if (isDark) printBox.classList.add('on-dark');
+            else printBox.classList.remove('on-dark');
 
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
             btn.classList.add('active');
@@ -512,23 +551,16 @@
             reader.onload = function(e) {
                 const tempImg = new Image();
                 tempImg.onload = function() {
-                    // حساب نسبة الطول للعرض الحقيقية للتصميم المرفوع
                     designAspectRatio = tempImg.naturalWidth / tempImg.naturalHeight;
                     document.getElementById('print-img').src = e.target.result;
-                    
-                    // تحديث المقاس فوراً ليطابق نسبة التصميم المرفوع بدون تمطيط
-                    if (currentMode === 'presets') {
-                        selectSize(currentSizeIndex);
-                    } else {
-                        applyManualCm('w');
-                    }
+                    if (currentMode === 'presets') selectSize(currentSizeIndex);
+                    else applyManualCm('w');
                 };
                 tempImg.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
 
-        // --- دالة حفظ المعاينة كصورة عالية الدقة مع بيانات المقاس واللون ---
         function saveDesignImage() {
             const canvas = document.createElement('canvas');
             const size = 1000;
@@ -537,7 +569,6 @@
             canvas.height = size + footerHeight;
             const ctx = canvas.getContext('2d');
 
-            // خلفية سوداء مطابقة للمحاكي
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -545,10 +576,8 @@
             const printEl = document.getElementById('print-img');
             const printBox = document.getElementById('print-box');
 
-            // 1. رسم صورة الهودي
             ctx.drawImage(hoodieEl, 0, 0, size, size);
 
-            // 2. تطبيق لون الهودي المختار (Multiply)
             if (currentColorHex !== 'transparent') {
                 ctx.save();
                 ctx.globalCompositeOperation = 'multiply';
@@ -557,7 +586,6 @@
                 ctx.restore();
             }
 
-            // 3. رسم التصميم في موقعه وحجمه الفعليين
             const leftPct = parseFloat(printBox.style.left) / 100;
             const topPct = parseFloat(printBox.style.top) / 100;
             const wPct = parseFloat(printBox.style.width) / 100;
@@ -575,7 +603,6 @@
             ctx.drawImage(printEl, drawX, drawY, drawW, drawH);
             ctx.restore();
 
-            // 4. شريط المواصفات السفلي للمطبعة والعميل
             ctx.fillStyle = '#181615';
             ctx.fillRect(0, size, size, footerHeight);
             ctx.strokeStyle = '#D4AF37';
@@ -592,9 +619,8 @@
 
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 28px Cairo, sans-serif';
-            ctx.fillText(`المقاس المعتمد للطباعة: ${currentWcm} × ${currentHcm} سم`, size - 35, size + 88);
+            ctx.fillText(`صافي مقاس الطباعة: ${currentWcm} × ${currentHcm} سم`, size - 35, size + 88);
 
-            // تنزيل الصورة تلقائياً
             const link = document.createElement('a');
             link.download = `EZWA-Hoodie-${currentAngle}-${currentWcm}x${currentHcm}cm.png`;
             link.href = canvas.toDataURL('image/png');
@@ -603,18 +629,19 @@
 
         function orderWhatsApp() {
             const faceName = angleNames[currentAngle];
-            const modeText = currentMode === 'free' ? 'مقاس حر مخصص' : angleSizes[currentAngle][currentSizeIndex].label;
-            const posNote = customMoved ? ' (موضع مخصص على الهودي)' : '';
-            const text = `السلام عليكم، اعتمدت مقاس الطباعة على الهودي في المحاكي:\n- القطعة: هودي أوفر سايز\n- اللون: ${currentColorName}\n- الجهة: ${faceName}${posNote}\n- المقاس الدقيق: ${currentWcm} × ${currentHcm} سم (${modeText})`;
+            const cfg = angleSizes[currentAngle][currentSizeIndex];
+            const modeText = currentMode === 'free' ? 'مقاس حر مخصص' : `${cfg.short}`;
+            const posNote = customMoved ? ' (موضع مخصص)' : '';
+            const text = `السلام عليكم، اعتمدت مقاس الطباعة على الهودي في المحاكي:\n- القطعة: هودي أوفر سايز\n- اللون: ${currentColorName}\n- الجهة: ${faceName}${posNote}\n- المقاس المختار: ${modeText}\n- صافي أبعاد التصميم: ${currentWcm} × ${currentHcm} سم`;
             const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
 
         setAngle('front');
 
-        // --- نظام التحريك والسحب من الزوايا ---
         const stage = document.getElementById('stage');
         const printBox = document.getElementById('print-box');
+        const paperGuide = document.getElementById('paper-guide');
         let isDraggingPrint = false;
         let activeCorner = null;
         let isSwipingStage = false;
@@ -627,9 +654,7 @@
                 activeCorner = handle.dataset.corner;
                 printBox.classList.remove('smooth-resize');
                 printBox.classList.add('dragging');
-                if (currentMode !== 'free') {
-                    switchMode('free');
-                }
+                if (currentMode !== 'free') switchMode('free');
             });
         });
 
@@ -663,9 +688,7 @@
                 let newWcm = widthPercent / CM_TO_PERCENT;
                 let newHcm = heightPercent / CM_TO_PERCENT;
 
-                if (lockAspectRatio) {
-                    newHcm = newWcm / designAspectRatio;
-                }
+                if (lockAspectRatio) newHcm = newWcm / designAspectRatio;
 
                 newWcm = Math.max(2.5, Math.min(32, newWcm));
                 newHcm = Math.max(2.5, Math.min(42, newHcm));
@@ -683,6 +706,8 @@
 
                 printBox.style.left = xPercent + '%';
                 printBox.style.top = yPercent + '%';
+                paperGuide.style.left = xPercent + '%';
+                paperGuide.style.top = yPercent + '%';
                 customMoved = true;
             }
         });
