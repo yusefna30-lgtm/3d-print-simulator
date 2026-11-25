@@ -44,8 +44,8 @@
 
         .mockup-stage {
             position: relative;
-            width: min(80vw, 350px);
-            height: min(43dvh, 350px);
+            width: min(76vw, 350px);
+            height: min(39dvh, 350px);
             overflow: hidden;
             border-radius: 22px;
             border: 1px solid rgba(212, 175, 55, 0.15);
@@ -152,12 +152,30 @@
             direction: ltr;
             transition: opacity 0.2s ease;
         }
+
+        @media (max-width: 640px) {
+            .side-tools {
+                left: 8px !important;
+                gap: 4px !important;
+            }
+            .side-tools .color-box {
+                padding: 4px !important;
+                gap: 4px !important;
+            }
+            .side-tools .color-dot {
+                width: 16px !important;
+                height: 16px !important;
+            }
+            .side-tools .tool-btn {
+                padding: 4px 5px !important;
+            }
+        }
     </style>
 </head>
 <body class="w-screen flex flex-col justify-between items-center relative">
 
     <!-- الشريط العلوي: الشعار + اختيار القطعة (هودي / تيشيرت) + الزوايا -->
-    <header class="w-full px-3 pt-2.5 pb-1 flex flex-wrap justify-between items-center gap-1.5 z-20 shrink-0">
+    <header class="w-full px-3 pt-2 pb-1 flex flex-wrap justify-between items-center gap-1.5 z-20 shrink-0">
         <div class="flex items-center gap-1.5">
             <div class="glass-panel px-2.5 py-1 rounded-xl flex items-center gap-2">
                 <div class="w-7 h-7 rounded-lg gold-bg flex items-center justify-center font-black text-xs">عِزوة</div>
@@ -184,7 +202,7 @@
     <!-- منطقة العرض الوسطى -->
     <main id="main-area" class="flex-1 flex flex-col items-center justify-center w-full relative z-10 px-4 min-h-0">
         
-        <div id="dpi-banner" class="mb-1.5 px-3 py-0.5 rounded-full glass-panel flex items-center gap-1.5 text-[10px]">
+        <div id="dpi-banner" class="mb-1 px-3 py-0.5 rounded-full glass-panel flex items-center gap-1.5 text-[10px]">
             <span id="dpi-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span id="dpi-text" class="text-stone-200 font-semibold">جودة التصميم: ممتازة للطباعة (300 DPI)</span>
             <span id="zoom-indicator" class="hidden mr-1 px-1.5 py-0.2 rounded bg-[#D4AF37]/20 text-[#D4AF37] font-bold" dir="ltr">1.5x</span>
@@ -207,9 +225,29 @@
             </div>
         </div>
 
-        <!-- أدوات التحكم الجانبية -->
-        <div class="fixed left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1.5">
-            <div class="glass-panel p-1.5 rounded-xl flex flex-col items-center gap-1.5">
+        <!-- شريط سريع للأدوات الإضافية في الجوال لظهور جميع الخيارات بوضوح -->
+        <div class="mt-1.5 flex sm:hidden items-center justify-center gap-1.5 flex-wrap">
+            <button id="btn-stage-zoom-m" onclick="cycleStageZoom()" class="tool-btn glass-panel px-2 py-1 rounded-lg text-[10px] font-bold text-stone-200 flex items-center gap-1">
+                <span>🔍</span>
+                <span id="zoom-btn-text-m">تكبير المعاينة</span>
+            </button>
+            <button id="btn-remove-bg-m" onclick="toggleRemoveWhiteBg()" class="tool-btn glass-panel px-2 py-1 rounded-lg text-[10px] font-bold text-stone-200 flex items-center gap-1">
+                <span>✨</span>
+                <span id="bg-btn-text-m">تفريغ الأبيض</span>
+            </button>
+            <button id="btn-lock-ratio-m" onclick="toggleRatioLock()" class="tool-btn glass-panel px-2 py-1 rounded-lg text-[10px] font-bold gold-accent border-[#D4AF37] flex items-center gap-1">
+                <span id="lock-icon-m">🔒</span>
+                <span id="lock-text-m">تناسب مقفل</span>
+            </button>
+            <button onclick="resetPosition()" class="tool-btn glass-panel px-2 py-1 rounded-lg text-[10px] font-bold text-stone-200 flex items-center gap-1">
+                <span>↺</span>
+                <span>توسيط</span>
+            </button>
+        </div>
+
+        <!-- أدوات التحكم الجانبية (الألوان + الرفع + أدوات المعاينة للشاشات المتوسطة والكبيرة) -->
+        <div class="side-tools fixed left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1.5">
+            <div class="color-box glass-panel p-1.5 rounded-xl flex flex-col items-center gap-1.5">
                 <span class="text-[9px] text-stone-400">اللون</span>
                 <button onclick="setColor('transparent', 'أبيض', false, this)" class="color-dot active w-5 h-5 rounded-full bg-[#ffffff] border border-stone-500 transition" title="أبيض"></button>
                 <button onclick="setColor('#262629', 'أسود مطفي', true, this)" class="color-dot w-5 h-5 rounded-full bg-[#18181b] border border-stone-500 transition" title="أسود"></button>
@@ -218,7 +256,7 @@
                 <button onclick="setColor('#3b473c', 'زيتي داكن', true, this)" class="color-dot w-5 h-5 rounded-full bg-[#2d362e] border border-stone-500 transition" title="زيتي"></button>
             </div>
 
-            <label class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#D4AF37] transition text-center">
+            <label class="tool-btn glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#D4AF37] transition text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 gold-accent mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
@@ -226,23 +264,22 @@
                 <input type="file" accept="image/*" class="hidden" onchange="uploadDesign(event)">
             </label>
 
-            <!-- زر تكبير الهودي والتصميم لمعاينة التفاصيل -->
-            <button id="btn-stage-zoom" onclick="cycleStageZoom()" class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center hover:border-[#D4AF37] transition text-center" title="تكبير القطعة والتصميم لمعاينة التفاصيل">
+            <button id="btn-stage-zoom" onclick="cycleStageZoom()" class="tool-btn hidden sm:flex glass-panel p-1.5 rounded-xl flex-col items-center justify-center hover:border-[#D4AF37] transition text-center" title="تكبير القطعة والتصميم لمعاينة التفاصيل">
                 <span class="text-xs mb-0.5">🔍</span>
                 <span id="zoom-btn-text" class="text-[8px] font-bold text-stone-300 leading-tight">تكبير<br>المعاينة</span>
             </button>
 
-            <button id="btn-remove-bg" onclick="toggleRemoveWhiteBg()" class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center hover:border-[#D4AF37] transition text-center" title="إزالة الخلفية البيضاء من الشعار">
+            <button id="btn-remove-bg" onclick="toggleRemoveWhiteBg()" class="tool-btn hidden sm:flex glass-panel p-1.5 rounded-xl flex-col items-center justify-center hover:border-[#D4AF37] transition text-center" title="إزالة الخلفية البيضاء من الشعار">
                 <span class="text-xs mb-0.5">✨</span>
                 <span id="bg-btn-text" class="text-[8px] font-bold text-stone-300 leading-tight">تفريغ<br>الأبيض</span>
             </button>
 
-            <button id="btn-lock-ratio" onclick="toggleRatioLock()" class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center border-[#D4AF37] transition text-center">
+            <button id="btn-lock-ratio" onclick="toggleRatioLock()" class="tool-btn hidden sm:flex glass-panel p-1.5 rounded-xl flex-col items-center justify-center border-[#D4AF37] transition text-center">
                 <span id="lock-icon" class="text-[11px]">🔒</span>
                 <span id="lock-text" class="text-[8px] font-bold gold-accent leading-tight">تناسب<br>مقفل</span>
             </button>
 
-            <button onclick="resetPosition()" class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center hover:border-[#D4AF37] transition text-center">
+            <button onclick="resetPosition()" class="tool-btn hidden sm:flex glass-panel p-1.5 rounded-xl flex-col items-center justify-center hover:border-[#D4AF37] transition text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 gold-accent mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
@@ -252,8 +289,8 @@
     </main>
 
     <!-- الشريط السفلي -->
-    <footer class="w-full px-3 pb-2.5 pt-1 z-20 shrink-0">
-        <div class="max-w-2xl mx-auto glass-panel rounded-2xl p-2.5 shadow-2xl">
+    <footer class="w-full px-3 pb-2 pt-1 z-20 shrink-0">
+        <div class="max-w-2xl mx-auto glass-panel rounded-2xl p-2 sm:p-2.5 shadow-2xl">
             
             <div class="flex flex-wrap justify-between items-center gap-1.5 mb-1.5">
                 <div class="flex bg-black/50 p-0.5 rounded-xl border border-stone-800">
@@ -313,7 +350,6 @@
         let designNaturalW = 1200;
         let designNaturalH = 1200;
 
-        // مستويات تكبير القطعة والتصميم معاً لمعاينة التفاصيل
         const zoomLevels = [1, 1.5, 2.2];
         let zoomIdx = 0;
         let panX = 0;
@@ -325,6 +361,7 @@
             const badge = document.getElementById('zoom-indicator');
             const btn = document.getElementById('btn-stage-zoom');
             const btnTxt = document.getElementById('zoom-btn-text');
+            const btnTxtM = document.getElementById('zoom-btn-text-m');
 
             const maxPan = ((scale - 1) * 140);
             panX = Math.max(-maxPan, Math.min(maxPan, panX));
@@ -339,6 +376,7 @@
                 btnTxt.classList.add('gold-accent');
                 btnTxt.classList.remove('text-stone-300');
                 btnTxt.innerHTML = `${scale}x<br>إلغاء`;
+                if (btnTxtM) btnTxtM.innerText = `${scale}x إلغاء`;
             } else {
                 panX = 0;
                 panY = 0;
@@ -348,6 +386,7 @@
                 btnTxt.classList.remove('gold-accent');
                 btnTxt.classList.add('text-stone-300');
                 btnTxt.innerHTML = 'تكبير<br>المعاينة';
+                if (btnTxtM) btnTxtM.innerText = 'تكبير المعاينة';
             }
         }
 
@@ -543,6 +582,7 @@
         function toggleRemoveWhiteBg() {
             const btn = document.getElementById('btn-remove-bg');
             const txt = document.getElementById('bg-btn-text');
+            const txtM = document.getElementById('bg-btn-text-m');
             const printBox = document.getElementById('print-box');
             const printImg = document.getElementById('print-img');
 
@@ -552,6 +592,7 @@
                 btn.classList.add('border-[#D4AF37]');
                 txt.classList.add('gold-accent');
                 txt.classList.remove('text-stone-300');
+                if (txtM) txtM.classList.add('gold-accent');
                 printBox.classList.add('transparent-bg');
 
                 const tempImg = new Image();
@@ -580,6 +621,7 @@
                 btn.classList.remove('border-[#D4AF37]');
                 txt.classList.remove('gold-accent');
                 txt.classList.add('text-stone-300');
+                if (txtM) txtM.classList.remove('gold-accent');
                 printBox.classList.remove('transparent-bg');
                 printImg.src = originalDesignDataUrl;
             }
@@ -606,6 +648,8 @@
             const btn = document.getElementById('btn-lock-ratio');
             const icon = document.getElementById('lock-icon');
             const text = document.getElementById('lock-text');
+            const iconM = document.getElementById('lock-icon-m');
+            const textM = document.getElementById('lock-text-m');
 
             if (lockAspectRatio) {
                 btn.classList.add('border-[#D4AF37]');
@@ -613,6 +657,8 @@
                 text.innerHTML = 'تناسب<br>مقفل';
                 text.classList.add('gold-accent');
                 text.classList.remove('text-stone-400');
+                if (iconM) iconM.innerText = '🔒';
+                if (textM) textM.innerText = 'تناسب مقفل';
                 if (hasUserUploadedDesign) {
                     if (currentMode === 'presets') selectSize(currentSizeIndex);
                     else applyManualCm('w');
@@ -623,6 +669,8 @@
                 text.innerHTML = 'تناسب<br>حر';
                 text.classList.remove('gold-accent');
                 text.classList.add('text-stone-400');
+                if (iconM) iconM.innerText = '🔓';
+                if (textM) textM.innerText = 'تناسب حر';
                 if (currentMode === 'presets') selectSize(currentSizeIndex);
             }
         }
