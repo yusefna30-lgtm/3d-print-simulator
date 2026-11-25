@@ -25,7 +25,7 @@
         }
         .gold-accent { color: #D4AF37; }
         .gold-bg { background-color: #D4AF37; color: #121212; }
-        .size-btn.active, .mode-btn.active, .prod-btn.active {
+        .size-btn.active, .mode-btn.active, .prod-btn.active, .workflow-btn.active {
             background-color: #D4AF37;
             color: #121212;
             font-weight: 700;
@@ -49,7 +49,7 @@
         .mockup-stage {
             position: relative;
             width: min(74vw, 350px);
-            height: min(35dvh, 320px);
+            height: min(34dvh, 310px);
             overflow: hidden;
             border-radius: 22px;
             border: 1px solid rgba(212, 175, 55, 0.15);
@@ -274,7 +274,7 @@
                 </div>
 
                 <div class="flex items-center gap-1.5 bg-black/40 px-2.5 py-1 rounded-lg border border-stone-800">
-                    <span id="paper-name-label" class="text-[10.5px] text-stone-300">شعار صدر:</span>
+                    <span id="paper-name-label" class="text-[10.5px] text-stone-300">المقاس المعتمد:</span>
                     <span id="size-label" class="text-[11px] gold-accent font-bold" dir="ltr">8.0 × 8.0 cm</span>
                     <span class="text-stone-600">|</span>
                     <span id="price-label" class="text-[11px] text-emerald-400 font-bold">طباعة: 5 ﷼</span>
@@ -302,16 +302,16 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-3 gap-2">
-                <button id="btn-prod-sheet" onclick="saveProductionSheet()" class="col-span-1 py-2 px-2 rounded-xl bg-stone-800 border border-[#D4AF37]/60 text-[#D4AF37] font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 hover:bg-stone-700 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span id="prod-sheet-label">ملف الإنتاج</span>
-                </button>
+            <!-- زر الإنتاج على حالتين: معاينة فقط / اعتماد وطلب مرتبط بالواتساب -->
+            <div class="grid grid-cols-3 gap-2 items-center">
+                <div class="col-span-1 flex bg-black/60 p-0.5 rounded-xl border border-stone-800 h-full">
+                    <button id="wf-preview" onclick="setWorkflowState('preview')" class="workflow-btn active flex-1 py-1.5 px-1 rounded-lg text-[10px] sm:text-[11px] transition">معاينة</button>
+                    <button id="wf-order" onclick="setWorkflowState('order')" class="workflow-btn flex-1 py-1.5 px-1 rounded-lg text-[10px] sm:text-[11px] text-stone-300 transition">طلب</button>
+                </div>
 
-                <button onclick="orderWhatsApp()" class="col-span-2 py-2 px-3 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
-                    <span id="wa-order-label">اعتماد المقاس والطلب عبر واتساب</span>
+                <button id="btn-prod-action" onclick="handleProductionAction()" class="col-span-2 py-2 px-3 rounded-xl bg-stone-800 border border-[#D4AF37]/70 text-[#D4AF37] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 hover:bg-stone-700 transition">
+                    <span id="prod-action-icon">👁️</span>
+                    <span id="prod-action-label">تصدير ورقة المعاينة (بدون طلب)</span>
                 </button>
             </div>
         </div>
@@ -327,6 +327,9 @@
         let designNaturalW = 1200;
         let designNaturalH = 1200;
 
+        // حالتا زر الإنتاج: 'preview' (معاينة فقط) | 'order' (طلب معتمد مرتبط بالواتساب)
+        let workflowState = 'preview';
+
         const savedAnglesState = {};
 
         const zoomLevels = [1, 1.5, 2.2];
@@ -334,30 +337,42 @@
         let panX = 0;
         let panY = 0;
 
-        // جدول تسعيرة الطباعة للجهة الواحدة بناءً على أكبر ضلع بالسنتيمتر (بالريال السعودي)
         function calculatePrintPrice(wCm, hCm) {
             const maxSide = Math.max(Number(wCm) || 0, Number(hCm) || 0);
             if (maxSide <= 4) {
-                return { tier: 'ليبل (Label)', price: 2 };
+                return { tier: 'ليبل', price: 2 };
             }
             if (maxSide <= 10) {
-                return { tier: 'لوجو (Logo)', price: 5 };
+                return { tier: 'لوجو', price: 5 };
             }
             if (maxSide <= 21) {
-                return { tier: 'مقاس A5', price: 10 };
+                return { tier: 'A5', price: 10 };
             }
             if (maxSide <= 29.7) {
-                return { tier: 'مقاس A4', price: 15 };
+                return { tier: 'A4', price: 15 };
             }
             if (maxSide <= 42) {
-                return { tier: 'مقاس A3', price: 20 };
+                return { tier: 'A3', price: 20 };
             }
-            return { tier: 'مقاس A2', price: 25 };
+            return { tier: 'A2', price: 25 };
         }
 
         function getActiveItemsForPricing() {
             const orderKeys = ['front', 'side_right', 'back', 'side_left'].filter(k => Boolean(savedAnglesState[k]));
             return orderKeys.length > 0 ? orderKeys.map(k => savedAnglesState[k]) : [buildAngleSnapshot(currentAngle)];
+        }
+
+        function setWorkflowState(state) {
+            workflowState = state;
+            const prevBtn = document.getElementById('wf-preview');
+            const ordBtn = document.getElementById('wf-order');
+
+            prevBtn.classList.toggle('active', state === 'preview');
+            prevBtn.classList.toggle('text-stone-300', state !== 'preview');
+            ordBtn.classList.toggle('active', state === 'order');
+            ordBtn.classList.toggle('text-stone-300', state !== 'order');
+
+            updatePriceSummaryUI();
         }
 
         function updatePriceSummaryUI() {
@@ -367,7 +382,9 @@
             const keysCount = Object.keys(savedAnglesState).length;
 
             const priceLabel = document.getElementById('price-label');
-            const waLabel = document.getElementById('wa-order-label');
+            const actionBtn = document.getElementById('btn-prod-action');
+            const actionIcon = document.getElementById('prod-action-icon');
+            const actionLabel = document.getElementById('prod-action-label');
 
             if (keysCount > 1) {
                 priceLabel.innerText = `إجمالي الطباعة: ${totalPrintPrice} ﷼`;
@@ -375,7 +392,24 @@
                 priceLabel.innerText = `طباعة: ${currentPricing.price} ﷼`;
             }
 
-            waLabel.innerText = `اعتماد والطلب عبر واتساب (${totalPrintPrice} ﷼ طباعة)`;
+            if (workflowState === 'preview') {
+                actionBtn.className = 'col-span-2 py-2 px-3 rounded-xl bg-stone-800 border border-[#D4AF37]/70 text-[#D4AF37] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 hover:bg-stone-700 transition';
+                actionIcon.innerText = '👁️';
+                actionLabel.innerText = keysCount > 1 ? `تصدير معاينة (${keysCount} جهات)` : 'تصدير ورقة المعاينة';
+            } else {
+                actionBtn.className = 'col-span-2 py-2 px-3 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 hover:opacity-95 transition';
+                actionIcon.innerText = '✅';
+                actionLabel.innerText = `إنتاج وإرسال واتساب (${totalPrintPrice} ﷼ طباعة)`;
+            }
+        }
+
+        async function handleProductionAction() {
+            if (workflowState === 'preview') {
+                await saveProductionSheet(false);
+            } else {
+                await saveProductionSheet(true);
+                orderWhatsApp();
+            }
         }
 
         function loadImageSafe(src, fallbackSrc) {
@@ -600,7 +634,6 @@
         function updateSaveButtonUI() {
             const keys = Object.keys(savedAnglesState);
             const badge = document.getElementById('saved-angles-badge');
-            const prodLabel = document.getElementById('prod-sheet-label');
             const saveTxt = document.getElementById('save-angle-text');
             const saveBtn = document.getElementById('btn-save-angle');
 
@@ -612,10 +645,8 @@
             if (keys.length > 0) {
                 badge.innerText = `${keys.length} محفوظ`;
                 badge.classList.remove('hidden');
-                prodLabel.innerText = keys.length > 1 ? `ملف الإنتاج (${keys.length})` : 'ملف الإنتاج';
             } else {
                 badge.classList.add('hidden');
-                prodLabel.innerText = 'ملف الإنتاج';
             }
 
             if (savedAnglesState[currentAngle]) {
@@ -643,8 +674,6 @@
                 angle: angKey,
                 angleLabel: angleNames[angKey],
                 sizeIndex: currentSizeIndex,
-                sizeShort: currentMode === 'free' ? 'مقاس حر مخصص' : cfg.short,
-                sizeLabel: currentMode === 'free' ? 'مقاس حر' : cfg.label,
                 priceTier: pricing.tier,
                 printPrice: pricing.price,
                 top: box.style.top || cfg.top,
@@ -774,7 +803,7 @@
             }
         }
 
-        function updateDimensionsUI(wCm, hCm, labelTitle = '') {
+        function updateDimensionsUI(wCm, hCm) {
             currentWcm = Math.round(wCm * 10) / 10;
             currentHcm = Math.round(hCm * 10) / 10;
 
@@ -784,7 +813,7 @@
 
             const textCm = `${currentWcm} × ${currentHcm} cm`;
             document.getElementById('live-badge').innerText = textCm;
-            document.getElementById('paper-name-label').innerText = labelTitle ? `${labelTitle}:` : 'المقاس:';
+            document.getElementById('paper-name-label').innerText = 'المقاس المعتمد:';
             document.getElementById('size-label').innerText = textCm;
 
             document.getElementById('input-w-cm').value = currentWcm;
@@ -817,7 +846,7 @@
                 tabPresets.classList.add('text-stone-300');
                 panelFree.classList.remove('hidden');
                 panelPresets.classList.add('hidden');
-                updateDimensionsUI(currentWcm, currentHcm, 'مقاس حر');
+                updateDimensionsUI(currentWcm, currentHcm);
             }
         }
 
@@ -834,7 +863,7 @@
             w = Math.max(2, Math.min(45, w));
             h = Math.max(2, Math.min(55, h));
             document.getElementById('print-box').classList.add('smooth-resize');
-            updateDimensionsUI(w, h, 'مقاس حر');
+            updateDimensionsUI(w, h);
         }
 
         function renderSizesButtons() {
@@ -880,7 +909,7 @@
                 }
             }
 
-            updateDimensionsUI(finalW, finalH, cfg.label);
+            updateDimensionsUI(finalW, finalH);
         }
 
         function setAngle(ang) {
@@ -913,7 +942,7 @@
                 const printBox = document.getElementById('print-box');
                 printBox.style.top = saved.top;
                 printBox.style.left = saved.left;
-                updateDimensionsUI(saved.wCm, saved.hCm, saved.sizeLabel);
+                updateDimensionsUI(saved.wCm, saved.hCm);
             } else {
                 const list = productSizes[currentProduct][ang];
                 currentSizeIndex = (ang === 'back') ? list.length - 1 : 0;
@@ -1039,18 +1068,18 @@
             ctx.textAlign = 'right';
             ctx.fillStyle = '#D4AF37';
             ctx.font = 'bold 23px Cairo, sans-serif';
-            ctx.fillText(`${item.angleLabel} — ${item.wCm} × ${item.hCm} سم`, x + w - 22, stageY + stageSize + 36);
+            ctx.fillText(`${item.angleLabel}: ${item.wCm} × ${item.hCm} سم`, x + w - 22, stageY + stageSize + 38);
 
             ctx.fillStyle = '#34d399';
             ctx.font = 'bold 19px Cairo, sans-serif';
-            ctx.fillText(`سعر الطباعة: ${item.printPrice} ﷼ (${item.priceTier})`, x + w - 22, stageY + stageSize + 68);
+            ctx.fillText(`سعر الطباعة: ${item.printPrice} ﷼ (${item.priceTier})`, x + w - 22, stageY + stageSize + 72);
 
             ctx.fillStyle = '#d6d3d1';
             ctx.font = '16px Cairo, sans-serif';
-            ctx.fillText(`اللون: ${item.colorName} | المقاس: ${item.sizeShort}`, x + w - 22, stageY + stageSize + 96);
+            ctx.fillText(`اللون: ${item.colorName} | الموضع: ${item.customMoved ? 'مخصص' : 'قياسي'}`, x + w - 22, stageY + stageSize + 102);
         }
 
-        async function saveProductionSheet() {
+        async function saveProductionSheet(isOrderMode = false) {
             const items = getActiveItemsForPricing();
             const totalPrintPrice = items.reduce((sum, item) => sum + item.printPrice, 0);
 
@@ -1081,9 +1110,10 @@
             ctx.beginPath(); ctx.moveTo(0, headerH); ctx.lineTo(canvasW, headerH); ctx.stroke();
 
             ctx.fillStyle = '#D4AF37';
-            ctx.font = 'bold 32px Cairo, sans-serif';
+            ctx.font = 'bold 31px Cairo, sans-serif';
             ctx.textAlign = 'right';
-            ctx.fillText(`عِزوة | ملف الإنتاج المكتمل (${items.length} ${items.length > 1 ? 'جهات' : 'جهة'})`, canvasW - 32, 65);
+            const docTitle = isOrderMode ? 'ملف الإنتاج المعتمد للطباعة' : 'ورقة معاينة التصميم والمقاسات';
+            ctx.fillText(`عِزوة | ${docTitle} (${items.length} ${items.length > 1 ? 'جهات' : 'جهة'})`, canvasW - 32, 65);
 
             for (let idx = 0; idx < items.length; idx++) {
                 const item = items[idx];
@@ -1113,16 +1143,17 @@
 
             ctx.fillStyle = '#f5f5f4';
             ctx.font = '19px Cairo, sans-serif';
-            const dimsSummary = items.map(i => `${i.angleLabel}: ${i.wCm}×${i.hCm} سم (${i.printPrice} ﷼)`).join('  •  ');
-            ctx.fillText(`التفاصيل: ${dimsSummary}`, canvasW - gap - 24, sumY + 126);
+            const dimsSummary = items.map(i => `${i.angleLabel}: ${i.wCm} × ${i.hCm} سم (${i.printPrice} ﷼)`).join('  •  ');
+            ctx.fillText(`المقاسات المعتمدة: ${dimsSummary}`, canvasW - gap - 24, sumY + 126);
 
             ctx.fillStyle = '#a8a29e';
             ctx.font = '17px Cairo, sans-serif';
             ctx.fillText(`تفريغ الخلفية: ${isBgRemoved ? 'مفعل (شفاف)' : 'أصلي'}  |  الدقة: ${document.getElementById('dpi-text').innerText.split('(')[1]?.replace(')', '') || '300 DPI'}`, canvasW - gap - 24, sumY + 162);
 
             const link = document.createElement('a');
-            const tagName = items.length > 1 ? `Complete-${items.length}sides` : `${currentAngle}-${currentWcm}x${currentHcm}cm`;
-            link.download = `EZWA-Production-${currentProduct}-${tagName}.png`;
+            const prefix = isOrderMode ? 'EZWA-Order' : 'EZWA-Preview';
+            const tagName = items.length > 1 ? `${items.length}sides` : `${currentAngle}-${currentWcm}x${currentHcm}cm`;
+            link.download = `${prefix}-${currentProduct}-${tagName}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
@@ -1133,8 +1164,8 @@
             const prodName = productNames[currentProduct];
             const bgNote = isBgRemoved ? ' (مع تفريغ الخلفية)' : '';
 
-            const lines = items.map(i => `• ${i.angleLabel}: ${i.sizeShort} (${i.wCm} × ${i.hCm} سم) — طباعة: ${i.printPrice} ﷼${i.customMoved ? ' [موضع مخصص]' : ''}`).join('\n');
-            const text = `السلام عليكم، اعتمدت طلب الطباعة في الاستوديو:\n- القطعة: ${prodName}\n- اللون: ${currentColorName}${bgNote}\n- الجهات والمقاسات:\n${lines}\n- إجمالي سعر الطباعة فقط: ${totalPrintPrice} ﷼ (غير شامل سعر القطعة)`;
+            const lines = items.map(i => `• ${i.angleLabel}: ${i.wCm} × ${i.hCm} سم — طباعة: ${i.printPrice} ﷼${i.customMoved ? ' [موضع مخصص]' : ''}`).join('\n');
+            const text = `السلام عليكم، اعتمدت طلب الطباعة في الاستوديو:\n- القطعة: ${prodName}\n- اللون: ${currentColorName}${bgNote}\n- الجهات والمقاسات المعتمدة:\n${lines}\n- إجمالي سعر الطباعة فقط: ${totalPrintPrice} ﷼ (غير شامل سعر القطعة)`;
             const url = `https://wa.me/966502777884?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
@@ -1237,7 +1268,7 @@
                 newWcm = Math.max(2.5, Math.min(45, newWcm));
                 newHcm = Math.max(2.5, Math.min(55, newHcm));
 
-                updateDimensionsUI(newWcm, newHcm, 'مقاس حر');
+                updateDimensionsUI(newWcm, newHcm);
                 return;
             }
 
