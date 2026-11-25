@@ -339,7 +339,6 @@
         let panY = 0;
 
         function calculatePrintPrice(wCm, hCm) {
-            // إذا كان المستخدم في وضع القوالب الجاهزة، نأخذ السعر المعتمد للقالب إن وجد لضمان وضوح التسعير
             if (currentMode === 'presets') {
                 const list = productSizes[currentProduct][currentAngle];
                 const cfg = list[currentSizeIndex];
@@ -347,7 +346,6 @@
                     return { tier: cfg.tier || '', price: cfg.price };
                 }
             }
-            // في المقاس الحر يُحسب بناءً على أكبر ضلع فعلي
             const maxSide = Math.max(Number(wCm) || 0, Number(hCm) || 0);
             if (maxSide <= 4) {
                 return { tier: 'ليبل', price: 2 };
@@ -361,10 +359,10 @@
             if (maxSide <= 29.7) {
                 return { tier: 'A4', price: 15 };
             }
-            if (maxSide <= 42) {
-                return { tier: 'A3', price: 20 };
+            if (maxSide <= 35) {
+                return { tier: 'ظهر كبير', price: 20 };
             }
-            return { tier: 'A2', price: 25 };
+            return { tier: 'A3', price: 25 };
         }
 
         function getActiveItemsForPricing() {
@@ -407,7 +405,6 @@
             const actionIcon = document.getElementById('prod-action-icon');
             const actionLabel = document.getElementById('prod-action-label');
 
-            // عرض سعر الجهة الحالية دائماً بوضوح حتى يرى العميل تغير السعر مع كل زر
             priceLabel.innerText = `سعر الجهة: ${currentPricing.price} ﷼`;
 
             if (workflowState === 'preview') {
@@ -595,7 +592,6 @@
             side_left:  'الكم اليسار'
         };
 
-        // ربط كل مقاس بسعره وفئته الصريحة حتى تظهر التسعيرة المتدرجة لكل مقاس في الظهر والأمام والكم بوضوح
         const productSizes = {
             hoodie: {
                 front: [
@@ -604,14 +600,14 @@
                     { short: 'شعار بارز (10 × 10 سم)',       top: '34%', left: '57%', maxW: 10,   maxH: 10,   price: 5,  tier: 'لوجو' },
                     { short: 'A5 (14.8 × 21 سم)',            top: '40%', left: '49%', maxW: 14.8, maxH: 21,   price: 10, tier: 'A5' },
                     { short: 'A4 (21 × 29.7 سم)',            top: '42%', left: '49%', maxW: 21,   maxH: 29.7, price: 15, tier: 'A4' },
-                    { short: 'A3 (29.7 × 42 سم)',            top: '46%', left: '49%', maxW: 29.7, maxH: 42,   price: 20, tier: 'A3' }
+                    { short: 'A3 (29.7 × 42 سم)',            top: '46%', left: '49%', maxW: 29.7, maxH: 42,   price: 25, tier: 'A3' }
                 ],
                 back: [
                     { short: 'أسفل القبعة (8 × 8 سم)',       top: '32%', left: '49%', maxW: 8,    maxH: 8,    price: 5,  tier: 'لوجو' },
                     { short: 'A5 (14.8 × 21 سم)',            top: '42%', left: '49%', maxW: 14.8, maxH: 21,   price: 10, tier: 'A5' },
                     { short: 'A4 (21 × 29.7 سم)',            top: '45%', left: '49%', maxW: 21,   maxH: 29.7, price: 15, tier: 'A4' },
-                    { short: 'ظهر كبير (28 × 35 سم)',        top: '47%', left: '49%', maxW: 28,   maxH: 35,   price: 20, tier: 'A3' },
-                    { short: 'A3 (29.7 × 42 سم)',            top: '49%', left: '49%', maxW: 29.7, maxH: 42,   price: 20, tier: 'A3' }
+                    { short: 'ظهر كبير (28 × 35 سم)',        top: '47%', left: '49%', maxW: 28,   maxH: 35,   price: 20, tier: 'ظهر كبير' },
+                    { short: 'A3 (29.7 × 42 سم)',            top: '49%', left: '49%', maxW: 29.7, maxH: 42,   price: 25, tier: 'A3' }
                 ],
                 side_right: [
                     { short: 'ليبل كم (3 × 3 سم)',          top: '41%', left: '44%', maxW: 3,    maxH: 3,    price: 2,  tier: 'ليبل' },
@@ -630,13 +626,14 @@
                     { short: 'شعار صدر (8 × 8 سم)',         top: '36%', left: '58%', maxW: 8,    maxH: 8,    price: 5,  tier: 'لوجو' },
                     { short: 'A5 (14.8 × 21 سم)',            top: '44%', left: '50%', maxW: 14.8, maxH: 21,   price: 10, tier: 'A5' },
                     { short: 'A4 (21 × 29.7 سم)',            top: '47%', left: '50%', maxW: 21,   maxH: 29.7, price: 15, tier: 'A4' },
-                    { short: 'A3 صدر كامل (29.7 × 42 سم)',   top: '51%', left: '50%', maxW: 29.7, maxH: 42,   price: 20, tier: 'A3' }
+                    { short: 'A3 صدر كامل (29.7 × 42 سم)',   top: '51%', left: '50%', maxW: 29.7, maxH: 42,   price: 25, tier: 'A3' }
                 ],
                 back: [
                     { short: 'أسفل الياقة (8 × 8 سم)',       top: '27%', left: '50%', maxW: 8,    maxH: 8,    price: 5,  tier: 'لوجو' },
                     { short: 'A5 (14.8 × 21 سم)',            top: '42%', left: '50%', maxW: 14.8, maxH: 21,   price: 10, tier: 'A5' },
                     { short: 'A4 (21 × 29.7 سم)',            top: '46%', left: '50%', maxW: 21,   maxH: 29.7, price: 15, tier: 'A4' },
-                    { short: 'A3 (29.7 × 42 سم)',            top: '51%', left: '50%', maxW: 29.7, maxH: 42,   price: 20, tier: 'A3' }
+                    { short: 'ظهر كبير (28 × 35 سم)',        top: '49%', left: '50%', maxW: 28,   maxH: 35,   price: 20, tier: 'ظهر كبير' },
+                    { short: 'A3 (29.7 × 42 سم)',            top: '51%', left: '50%', maxW: 29.7, maxH: 42,   price: 25, tier: 'A3' }
                 ],
                 side_right: [
                     { short: 'ليبل كم (3 × 3 سم)',          top: '38%', left: '50%', maxW: 3,    maxH: 3,    price: 2,  tier: 'ليبل' },
