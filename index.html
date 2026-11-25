@@ -52,6 +52,16 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
             background-color: #000000;
         }
+        .stage-zoom-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-origin: center center;
+            transition: transform 0.2s ease-out;
+        }
+        .stage-zoom-inner.no-anim {
+            transition: none;
+        }
         .garment-img {
             width: 100%;
             height: 100%;
@@ -177,20 +187,23 @@
         <div id="dpi-banner" class="mb-1.5 px-3 py-0.5 rounded-full glass-panel flex items-center gap-1.5 text-[10px]">
             <span id="dpi-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span id="dpi-text" class="text-stone-200 font-semibold">جودة التصميم: ممتازة للطباعة (300 DPI)</span>
+            <span id="zoom-indicator" class="hidden mr-1 px-1.5 py-0.2 rounded bg-[#D4AF37]/20 text-[#D4AF37] font-bold" dir="ltr">1.5x</span>
         </div>
 
         <div id="stage" class="mockup-stage cursor-grab active:cursor-grabbing">
-            <img id="garment-img" src="front.jpg.jpg" alt="القطعة" class="garment-img">
-            <div id="color-tint" class="color-overlay" style="background-color: transparent;"></div>
-            
-            <div id="print-box" class="print-layer smooth-resize" style="top: 34%; left: 57%; width: 9.2%; height: 9.2%;">
-                <div id="live-badge" class="live-cm-badge">8.0 × 8.0 cm</div>
-                <img id="print-img" src="" alt="التصميم" class="w-full h-full object-contain pointer-events-none">
+            <div id="zoom-inner" class="stage-zoom-inner">
+                <img id="garment-img" src="front.jpg.jpg" alt="القطعة" class="garment-img">
+                <div id="color-tint" class="color-overlay" style="background-color: transparent;"></div>
                 
-                <div class="resize-handle handle-nw" data-corner="nw"></div>
-                <div class="resize-handle handle-ne" data-corner="ne"></div>
-                <div class="resize-handle handle-sw" data-corner="sw"></div>
-                <div class="resize-handle handle-se" data-corner="se"></div>
+                <div id="print-box" class="print-layer smooth-resize" style="top: 34%; left: 57%; width: 9.2%; height: 9.2%;">
+                    <div id="live-badge" class="live-cm-badge">8.0 × 8.0 cm</div>
+                    <img id="print-img" src="" alt="التصميم" class="w-full h-full object-contain pointer-events-none">
+                    
+                    <div class="resize-handle handle-nw" data-corner="nw"></div>
+                    <div class="resize-handle handle-ne" data-corner="ne"></div>
+                    <div class="resize-handle handle-sw" data-corner="sw"></div>
+                    <div class="resize-handle handle-se" data-corner="se"></div>
+                </div>
             </div>
         </div>
 
@@ -212,6 +225,12 @@
                 <span class="text-[8.5px] font-bold text-white leading-tight">ارفع<br>تصميمك</span>
                 <input type="file" accept="image/*" class="hidden" onchange="uploadDesign(event)">
             </label>
+
+            <!-- زر تكبير الهودي والتصميم لمعاينة التفاصيل -->
+            <button id="btn-stage-zoom" onclick="cycleStageZoom()" class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center hover:border-[#D4AF37] transition text-center" title="تكبير القطعة والتصميم لمعاينة التفاصيل">
+                <span class="text-xs mb-0.5">🔍</span>
+                <span id="zoom-btn-text" class="text-[8px] font-bold text-stone-300 leading-tight">تكبير<br>المعاينة</span>
+            </button>
 
             <button id="btn-remove-bg" onclick="toggleRemoveWhiteBg()" class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center hover:border-[#D4AF37] transition text-center" title="إزالة الخلفية البيضاء من الشعار">
                 <span class="text-xs mb-0.5">✨</span>
@@ -293,6 +312,53 @@
         let transparentDesignDataUrl = '';
         let designNaturalW = 1200;
         let designNaturalH = 1200;
+
+        // مستويات تكبير القطعة والتصميم معاً لمعاينة التفاصيل
+        const zoomLevels = [1, 1.5, 2.2];
+        let zoomIdx = 0;
+        let panX = 0;
+        let panY = 0;
+
+        function applyStageTransform() {
+            const scale = zoomLevels[zoomIdx];
+            const inner = document.getElementById('zoom-inner');
+            const badge = document.getElementById('zoom-indicator');
+            const btn = document.getElementById('btn-stage-zoom');
+            const btnTxt = document.getElementById('zoom-btn-text');
+
+            const maxPan = ((scale - 1) * 140);
+            panX = Math.max(-maxPan, Math.min(maxPan, panX));
+            panY = Math.max(-maxPan, Math.min(maxPan, panY));
+
+            inner.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+
+            if (scale > 1) {
+                badge.innerText = `${scale}x`;
+                badge.classList.remove('hidden');
+                btn.classList.add('border-[#D4AF37]');
+                btnTxt.classList.add('gold-accent');
+                btnTxt.classList.remove('text-stone-300');
+                btnTxt.innerHTML = `${scale}x<br>إلغاء`;
+            } else {
+                panX = 0;
+                panY = 0;
+                inner.style.transform = 'translate(0px, 0px) scale(1)';
+                badge.classList.add('hidden');
+                btn.classList.remove('border-[#D4AF37]');
+                btnTxt.classList.remove('gold-accent');
+                btnTxt.classList.add('text-stone-300');
+                btnTxt.innerHTML = 'تكبير<br>المعاينة';
+            }
+        }
+
+        function cycleStageZoom() {
+            zoomIdx = (zoomIdx + 1) % zoomLevels.length;
+            if (zoomIdx === 0) {
+                panX = 0;
+                panY = 0;
+            }
+            applyStageTransform();
+        }
 
         function generateTshirtFallback(angle) {
             const c = document.createElement('canvas');
@@ -699,6 +765,10 @@
 
         function resetPosition() {
             setPrintSelected(true);
+            zoomIdx = 0;
+            panX = 0;
+            panY = 0;
+            applyStageTransform();
             const printBox = document.getElementById('print-box');
             printBox.classList.add('smooth-resize');
             printBox.style.top = (currentAngle === 'back') ? '48%' : '42%';
@@ -881,7 +951,6 @@
 
         setAngle('front');
 
-        // استقبال التصميم القادم من الكتالوج مع الإبقاء على الهودي كخيار افتراضي
         (function loadDesignFromCatalog() {
             const params = new URLSearchParams(window.location.search);
             const designUrl = params.get('design');
@@ -893,10 +962,15 @@
         const stage = document.getElementById('stage');
         const mainArea = document.getElementById('main-area');
         const printBox = document.getElementById('print-box');
+        const zoomInner = document.getElementById('zoom-inner');
         let isDraggingPrint = false;
         let activeCorner = null;
+        let isPanningStage = false;
         let isSwipingStage = false;
         let startX = 0;
+        let startY = 0;
+        let panOriginX = 0;
+        let panOriginY = 0;
         const anglesOrder = ['front', 'side_right', 'back', 'side_left'];
 
         document.querySelectorAll('.resize-handle').forEach(handle => {
@@ -922,8 +996,17 @@
         stage.addEventListener('pointerdown', (e) => {
             if (isDraggingPrint || activeCorner) return;
             setPrintSelected(false);
-            isSwipingStage = true;
-            startX = e.clientX;
+            if (zoomLevels[zoomIdx] > 1) {
+                isPanningStage = true;
+                zoomInner.classList.add('no-anim');
+                startX = e.clientX;
+                startY = e.clientY;
+                panOriginX = panX;
+                panOriginY = panY;
+            } else {
+                isSwipingStage = true;
+                startX = e.clientX;
+            }
         });
 
         mainArea.addEventListener('pointerdown', (e) => {
@@ -932,6 +1015,17 @@
 
         window.addEventListener('pointermove', (e) => {
             const rect = stage.getBoundingClientRect();
+            const scale = zoomLevels[zoomIdx];
+
+            if (isPanningStage) {
+                panX = panOriginX + (e.clientX - startX);
+                panY = panOriginY + (e.clientY - startY);
+                const maxPan = ((scale - 1) * 140);
+                panX = Math.max(-maxPan, Math.min(maxPan, panX));
+                panY = Math.max(-maxPan, Math.min(maxPan, panY));
+                zoomInner.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+                return;
+            }
 
             if (activeCorner) {
                 const centerX = rect.left + (parseFloat(printBox.style.left) / 100) * rect.width;
@@ -971,6 +1065,10 @@
         });
 
         window.addEventListener('pointerup', (e) => {
+            if (isPanningStage) {
+                isPanningStage = false;
+                zoomInner.classList.remove('no-anim');
+            }
             if (activeCorner) {
                 activeCorner = null;
                 printBox.classList.remove('dragging');
