@@ -45,7 +45,7 @@
         .mockup-stage {
             position: relative;
             width: min(74vw, 350px);
-            height: min(37dvh, 340px);
+            height: min(36dvh, 330px);
             overflow: hidden;
             border-radius: 22px;
             border: 1px solid rgba(212, 175, 55, 0.15);
@@ -182,7 +182,7 @@
     </header>
 
     <!-- منطقة العرض الوسطى -->
-    <main id="main-area" class="flex-1 flex flex-col items-center justify-center w-full relative z-10 pr-3 pl-14 sm:px-4 min-h-0">
+    <main id="main-area" class="flex-1 flex flex-col items-center justify-center w-full relative z-10 pr-2.5 pl-12 sm:px-4 min-h-0">
         
         <div id="dpi-banner" class="mb-1 px-3 py-0.5 rounded-full glass-panel flex items-center gap-1.5 text-[10px]">
             <span id="dpi-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
@@ -207,31 +207,37 @@
             </div>
         </div>
 
-        <!-- شريط أزرار مضغوط في صف واحد أسفل الصورة دون أي تداخل -->
-        <div class="mt-1.5 flex items-center justify-center gap-1.5 whitespace-nowrap">
-            <button id="btn-stage-zoom" onclick="cycleStageZoom()" class="glass-panel px-2 py-1 rounded-lg text-[10px] font-bold text-stone-200 flex items-center gap-1 transition">
+        <!-- شبكة خماسية متساوية العرض في صف واحد أسفل الصورة دون أي تداخل -->
+        <div class="mt-1.5 w-full max-w-md grid grid-cols-5 gap-1">
+            <label class="glass-panel py-1 px-1 rounded-lg text-[9.5px] font-bold text-white flex items-center justify-center gap-0.5 cursor-pointer hover:border-[#D4AF37] transition truncate">
+                <span>⬆</span>
+                <span>رفع</span>
+                <input type="file" accept="image/*" class="hidden" onchange="uploadDesign(event)">
+            </label>
+
+            <button id="btn-stage-zoom" onclick="cycleStageZoom()" class="glass-panel py-1 px-1 rounded-lg text-[9.5px] font-bold text-stone-200 flex items-center justify-center gap-0.5 transition truncate">
                 <span>🔍</span>
                 <span id="zoom-btn-text">تكبير</span>
             </button>
 
-            <button id="btn-remove-bg" onclick="toggleRemoveWhiteBg()" class="glass-panel px-2 py-1 rounded-lg text-[10px] font-bold text-stone-200 flex items-center gap-1 transition">
+            <button id="btn-remove-bg" onclick="toggleRemoveWhiteBg()" class="glass-panel py-1 px-1 rounded-lg text-[9.5px] font-bold text-stone-200 flex items-center justify-center gap-0.5 transition truncate">
                 <span>✨</span>
                 <span id="bg-btn-text">تفريغ</span>
             </button>
 
-            <button id="btn-lock-ratio" onclick="toggleRatioLock()" class="glass-panel px-2 py-1 rounded-lg text-[10px] font-bold gold-accent border-[#D4AF37] flex items-center gap-1 transition">
+            <button id="btn-lock-ratio" onclick="toggleRatioLock()" class="glass-panel py-1 px-1 rounded-lg text-[9.5px] font-bold gold-accent border-[#D4AF37] flex items-center justify-center gap-0.5 transition truncate">
                 <span id="lock-icon">🔒</span>
                 <span id="lock-text">تناسب</span>
             </button>
 
-            <button onclick="resetPosition()" class="glass-panel px-2 py-1 rounded-lg text-[10px] font-bold text-stone-200 flex items-center gap-1 transition">
+            <button onclick="resetPosition()" class="glass-panel py-1 px-1 rounded-lg text-[9.5px] font-bold text-stone-200 flex items-center justify-center gap-0.5 transition truncate">
                 <span>↺</span>
                 <span>توسيط</span>
             </button>
         </div>
 
-        <!-- أدوات التحكم الجانبية المضغوطة (اللون + رفع التصميم) -->
-        <div class="fixed left-2 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1.5">
+        <!-- شريط الألوان الجانبي فقط -->
+        <div class="fixed left-2 top-1/2 -translate-y-1/2 z-20">
             <div class="glass-panel p-1 rounded-xl flex flex-col items-center gap-1">
                 <span class="text-[8.5px] text-stone-400">اللون</span>
                 <button onclick="setColor('transparent', 'أبيض', false, this)" class="color-dot active w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#ffffff] border border-stone-500 transition" title="أبيض"></button>
@@ -240,14 +246,6 @@
                 <button onclick="setColor('#d8cab3', 'بيج رملي', false, this)" class="color-dot w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#d6cbb8] border border-stone-500 transition" title="بيج"></button>
                 <button onclick="setColor('#3b473c', 'زيتي داكن', true, this)" class="color-dot w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#2d362e] border border-stone-500 transition" title="زيتي"></button>
             </div>
-
-            <label class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#D4AF37] transition text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4 gold-accent mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                <span class="text-[8px] font-bold text-white leading-tight">ارفع<br>تصميمك</span>
-                <input type="file" accept="image/*" class="hidden" onchange="uploadDesign(event)">
-            </label>
         </div>
     </main>
 
