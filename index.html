@@ -302,7 +302,6 @@
                 </div>
             </div>
 
-            <!-- زر الإنتاج على حالتين: معاينة فقط / اعتماد وطلب مرتبط بالواتساب -->
             <div class="grid grid-cols-3 gap-2 items-center">
                 <div class="col-span-1 flex bg-black/60 p-0.5 rounded-xl border border-stone-800 h-full">
                     <button id="wf-preview" onclick="setWorkflowState('preview')" class="workflow-btn active flex-1 py-1.5 px-1 rounded-lg text-[10px] sm:text-[11px] transition">معاينة</button>
@@ -311,9 +310,13 @@
 
                 <button id="btn-prod-action" onclick="handleProductionAction()" class="col-span-2 py-2 px-3 rounded-xl bg-stone-800 border border-[#D4AF37]/70 text-[#D4AF37] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 hover:bg-stone-700 transition">
                     <span id="prod-action-icon">👁️</span>
-                    <span id="prod-action-label">تصدير ورقة المعاينة (بدون طلب)</span>
+                    <span id="prod-action-label">تصدير ورقة المعاينة</span>
                 </button>
             </div>
+
+            <p id="status-hint" class="mt-1 text-[10px] text-stone-400 text-center">
+                وضع المعاينة: يحفظ ورقة المعاينة فقط دون فتح طلب واتساب.
+            </p>
         </div>
     </footer>
 
@@ -327,9 +330,7 @@
         let designNaturalW = 1200;
         let designNaturalH = 1200;
 
-        // حالتا زر الإنتاج: 'preview' (معاينة فقط) | 'order' (طلب معتمد مرتبط بالواتساب)
         let workflowState = 'preview';
-
         const savedAnglesState = {};
 
         const zoomLevels = [1, 1.5, 2.2];
@@ -362,15 +363,26 @@
             return orderKeys.length > 0 ? orderKeys.map(k => savedAnglesState[k]) : [buildAngleSnapshot(currentAngle)];
         }
 
+        function syncSavedAngleIfPresent() {
+            if (savedAnglesState[currentAngle]) {
+                savedAnglesState[currentAngle] = buildAngleSnapshot(currentAngle);
+            }
+        }
+
         function setWorkflowState(state) {
             workflowState = state;
             const prevBtn = document.getElementById('wf-preview');
             const ordBtn = document.getElementById('wf-order');
+            const hint = document.getElementById('status-hint');
 
             prevBtn.classList.toggle('active', state === 'preview');
             prevBtn.classList.toggle('text-stone-300', state !== 'preview');
             ordBtn.classList.toggle('active', state === 'order');
             ordBtn.classList.toggle('text-stone-300', state !== 'order');
+
+            hint.innerText = state === 'preview'
+                ? 'وضع المعاينة: يصدّر ورقة المعاينة فقط دون فتح طلب واتساب.'
+                : 'وضع الطلب: يجهّز صورة الإنتاج ويربطها بمشاركة/طلب واتساب.';
 
             updatePriceSummaryUI();
         }
@@ -407,8 +419,7 @@
             if (workflowState === 'preview') {
                 await saveProductionSheet(false);
             } else {
-                await saveProductionSheet(true);
-                orderWhatsApp();
+                await sendOrderWithProductionImage();
             }
         }
 
@@ -581,52 +592,54 @@
         const productSizes = {
             hoodie: {
                 front: [
-                    { short: 'شعار صدر (8 × 8 سم)',   label: 'شعار صدر',     top: '34%', left: '57%', maxW: 8,    maxH: 8 },
-                    { short: 'شعار بارز (10 × 10 سم)', label: 'شعار بارز',     top: '34%', left: '57%', maxW: 10,   maxH: 10 },
-                    { short: 'وسط الصدر (20 × 20 سم)', label: 'وسط الصدر',     top: '39%', left: '49%', maxW: 20,   maxH: 20 },
-                    { short: 'صدر عريض (25 × 10 سم)',  label: 'صدر عريض',      top: '36%', left: '49%', maxW: 25,   maxH: 10 },
-                    { short: 'A5 (14.8 × 21 سم)',      label: 'مقاس A5',       top: '40%', left: '49%', maxW: 14.8, maxH: 21 },
-                    { short: 'A4 (21 × 29.7 سم)',      label: 'مقاس A4',       top: '42%', left: '49%', maxW: 21,   maxH: 29.7 }
+                    { short: 'ليبل / شعار صغير (4 × 4 سم)', top: '34%', left: '57%', maxW: 4,    maxH: 4 },
+                    { short: 'شعار صدر (8 × 8 سم)',         top: '34%', left: '57%', maxW: 8,    maxH: 8 },
+                    { short: 'شعار بارز (10 × 10 سم)',       top: '34%', left: '57%', maxW: 10,   maxH: 10 },
+                    { short: 'A5 (14.8 × 21 سم)',            top: '40%', left: '49%', maxW: 14.8, maxH: 21 },
+                    { short: 'A4 (21 × 29.7 سم)',            top: '42%', left: '49%', maxW: 21,   maxH: 29.7 },
+                    { short: 'A3 (29.7 × 42 سم)',            top: '46%', left: '49%', maxW: 29.7, maxH: 42 }
                 ],
                 back: [
-                    { short: 'أسفل القبعة (8 × 8 سم)',label: 'أسفل القبعة',   top: '32%', left: '49%', maxW: 8,    maxH: 8 },
-                    { short: 'A5 (14.8 × 21 سم)',      label: 'مقاس A5',       top: '42%', left: '49%', maxW: 14.8, maxH: 21 },
-                    { short: 'A4 (21 × 29.7 سم)',      label: 'مقاس A4',       top: '45%', left: '49%', maxW: 21,   maxH: 29.7 },
-                    { short: 'ظهر كبير (30 × 35 سم)',  label: 'ظهر كبير',      top: '47%', left: '49%', maxW: 30,   maxH: 35 },
-                    { short: 'A3 (29.7 × 42 سم)',      label: 'مقاس A3 كامل',  top: '49%', left: '49%', maxW: 29.7, maxH: 42 }
+                    { short: 'أسفل القبعة (8 × 8 سم)',       top: '32%', left: '49%', maxW: 8,    maxH: 8 },
+                    { short: 'A5 (14.8 × 21 سم)',            top: '42%', left: '49%', maxW: 14.8, maxH: 21 },
+                    { short: 'A4 (21 × 29.7 سم)',            top: '45%', left: '49%', maxW: 21,   maxH: 29.7 },
+                    { short: 'ظهر كبير (28 × 35 سم)',        top: '47%', left: '49%', maxW: 28,   maxH: 35 },
+                    { short: 'A3 (29.7 × 42 سم)',            top: '49%', left: '49%', maxW: 29.7, maxH: 42 }
                 ],
                 side_right: [
-                    { short: 'شعار كم (8 × 8 سم)',     label: 'كم قياسي',      top: '41%', left: '44%', maxW: 8,    maxH: 8 },
-                    { short: 'كم بارز (10 × 10 سم)',   label: 'كم بارز',       top: '41%', left: '44%', maxW: 10,   maxH: 10 },
-                    { short: 'كم طولي (8 × 25 سم)',    label: 'كم طولي',       top: '48%', left: '44%', maxW: 8,    maxH: 25 }
+                    { short: 'ليبل كم (3 × 3 سم)',          top: '41%', left: '44%', maxW: 3,    maxH: 3 },
+                    { short: 'شعار كم (8 × 8 سم)',           top: '41%', left: '44%', maxW: 8,    maxH: 8 },
+                    { short: 'كم بارز (10 × 10 سم)',         top: '41%', left: '44%', maxW: 10,   maxH: 10 }
                 ],
                 side_left: [
-                    { short: 'شعار كم (8 × 8 سم)',     label: 'كم قياسي',      top: '41%', left: '53%', maxW: 8,    maxH: 8 },
-                    { short: 'كم بارز (10 × 10 سم)',   label: 'كم بارز',       top: '41%', left: '53%', maxW: 10,   maxH: 10 },
-                    { short: 'كم طولي (8 × 25 سم)',    label: 'كم طولي',       top: '48%', left: '53%', maxW: 8,    maxH: 25 }
+                    { short: 'ليبل كم (3 × 3 سم)',          top: '41%', left: '53%', maxW: 3,    maxH: 3 },
+                    { short: 'شعار كم (8 × 8 سم)',           top: '41%', left: '53%', maxW: 8,    maxH: 8 },
+                    { short: 'كم بارز (10 × 10 سم)',         top: '41%', left: '53%', maxW: 10,   maxH: 10 }
                 ]
             },
             tshirt: {
                 front: [
-                    { short: 'شعار صدر (8 × 8 سم)',   label: 'شعار صدر',     top: '36%', left: '58%', maxW: 8,    maxH: 8 },
-                    { short: 'وسط الصدر (20 × 20 سم)', label: 'وسط الصدر',     top: '43%', left: '50%', maxW: 20,   maxH: 20 },
-                    { short: 'A5 (14.8 × 21 سم)',      label: 'مقاس A5',       top: '44%', left: '50%', maxW: 14.8, maxH: 21 },
-                    { short: 'A4 (21 × 29.7 سم)',      label: 'مقاس A4',       top: '47%', left: '50%', maxW: 21,   maxH: 29.7 },
-                    { short: 'A3 صدر كامل (29.7×42)',  label: 'صدر كامل A3',   top: '51%', left: '50%', maxW: 29.7, maxH: 42 }
+                    { short: 'ليبل / شعار صغير (4 × 4 سم)', top: '36%', left: '58%', maxW: 4,    maxH: 4 },
+                    { short: 'شعار صدر (8 × 8 سم)',         top: '36%', left: '58%', maxW: 8,    maxH: 8 },
+                    { short: 'A5 (14.8 × 21 سم)',            top: '44%', left: '50%', maxW: 14.8, maxH: 21 },
+                    { short: 'A4 (21 × 29.7 سم)',            top: '47%', left: '50%', maxW: 21,   maxH: 29.7 },
+                    { short: 'A3 صدر كامل (29.7 × 42 سم)',   top: '51%', left: '50%', maxW: 29.7, maxH: 42 }
                 ],
                 back: [
-                    { short: 'أسفل الياقة (8 × 8 سم)', label: 'أسفل الياقة',   top: '27%', left: '50%', maxW: 8,    maxH: 8 },
-                    { short: 'A4 (21 × 29.7 سم)',      label: 'مقاس A4',       top: '46%', left: '50%', maxW: 21,   maxH: 29.7 },
-                    { short: 'ظهر كبير (30 × 35 سم)',  label: 'ظهر كبير',      top: '49%', left: '50%', maxW: 30,   maxH: 35 },
-                    { short: 'A3 (29.7 × 42 سم)',      label: 'مقاس A3 كامل',  top: '51%', left: '50%', maxW: 29.7, maxH: 42 }
+                    { short: 'أسفل الياقة (8 × 8 سم)',       top: '27%', left: '50%', maxW: 8,    maxH: 8 },
+                    { short: 'A5 (14.8 × 21 سم)',            top: '42%', left: '50%', maxW: 14.8, maxH: 21 },
+                    { short: 'A4 (21 × 29.7 سم)',            top: '46%', left: '50%', maxW: 21,   maxH: 29.7 },
+                    { short: 'A3 (29.7 × 42 سم)',            top: '51%', left: '50%', maxW: 29.7, maxH: 42 }
                 ],
                 side_right: [
-                    { short: 'شعار كم (8 × 8 سم)',     label: 'كم قياسي',      top: '38%', left: '50%', maxW: 8,    maxH: 8 },
-                    { short: 'كم بارز (10 × 10 سم)',   label: 'كم بارز',       top: '38%', left: '50%', maxW: 10,   maxH: 10 }
+                    { short: 'ليبل كم (3 × 3 سم)',          top: '38%', left: '50%', maxW: 3,    maxH: 3 },
+                    { short: 'شعار كم (8 × 8 سم)',           top: '38%', left: '50%', maxW: 8,    maxH: 8 },
+                    { short: 'كم بارز (10 × 10 سم)',         top: '38%', left: '50%', maxW: 10,   maxH: 10 }
                 ],
                 side_left: [
-                    { short: 'شعار كم (8 × 8 سم)',     label: 'كم قياسي',      top: '38%', left: '50%', maxW: 8,    maxH: 8 },
-                    { short: 'كم بارز (10 × 10 سم)',   label: 'كم بارز',       top: '38%', left: '50%', maxW: 10,   maxH: 10 }
+                    { short: 'ليبل كم (3 × 3 سم)',          top: '38%', left: '50%', maxW: 3,    maxH: 3 },
+                    { short: 'شعار كم (8 × 8 سم)',           top: '38%', left: '50%', maxW: 8,    maxH: 8 },
+                    { short: 'كم بارز (10 × 10 سم)',         top: '38%', left: '50%', maxW: 10,   maxH: 10 }
                 ]
             }
         };
@@ -755,6 +768,8 @@
                     ctx.putImageData(imgData, 0, 0);
                     transparentDesignDataUrl = c.toDataURL('image/png');
                     printImg.src = transparentDesignDataUrl;
+                    syncSavedAngleIfPresent();
+                    updatePriceSummaryUI();
                 };
                 tempImg.src = originalDesignDataUrl;
             } else {
@@ -762,6 +777,8 @@
                 txt.innerText = 'تفريغ';
                 printBox.classList.remove('transparent-bg');
                 printImg.src = originalDesignDataUrl;
+                syncSavedAngleIfPresent();
+                updatePriceSummaryUI();
             }
         }
 
@@ -820,6 +837,7 @@
             document.getElementById('input-h-cm').value = currentHcm;
 
             checkPrintDPI();
+            syncSavedAngleIfPresent();
             updatePriceSummaryUI();
         }
 
@@ -964,6 +982,7 @@
             printBox.style.top = (currentAngle === 'back') ? '48%' : '42%';
             printBox.style.left = (currentAngle === 'side_right') ? '45%' : (currentAngle === 'side_left') ? '52%' : '50%';
             customMoved = true;
+            syncSavedAngleIfPresent();
         }
 
         function setColor(hex, name, isDark, btn) {
@@ -977,6 +996,7 @@
 
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
             btn.classList.add('active');
+            syncSavedAngleIfPresent();
         }
 
         function applyLoadedDesign(srcUrl) {
@@ -1079,7 +1099,7 @@
             ctx.fillText(`اللون: ${item.colorName} | الموضع: ${item.customMoved ? 'مخصص' : 'قياسي'}`, x + w - 22, stageY + stageSize + 102);
         }
 
-        async function saveProductionSheet(isOrderMode = false) {
+        async function buildProductionCanvas(isOrderMode = false) {
             const items = getActiveItemsForPricing();
             const totalPrintPrice = items.reduce((sum, item) => sum + item.printPrice, 0);
 
@@ -1150,22 +1170,60 @@
             ctx.font = '17px Cairo, sans-serif';
             ctx.fillText(`تفريغ الخلفية: ${isBgRemoved ? 'مفعل (شفاف)' : 'أصلي'}  |  الدقة: ${document.getElementById('dpi-text').innerText.split('(')[1]?.replace(')', '') || '300 DPI'}`, canvasW - gap - 24, sumY + 162);
 
-            const link = document.createElement('a');
             const prefix = isOrderMode ? 'EZWA-Order' : 'EZWA-Preview';
             const tagName = items.length > 1 ? `${items.length}sides` : `${currentAngle}-${currentWcm}x${currentHcm}cm`;
-            link.download = `${prefix}-${currentProduct}-${tagName}.png`;
+            const fileName = `${prefix}-${currentProduct}-${tagName}.png`;
+
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+            return { canvas, blob, fileName, items, totalPrintPrice };
+        }
+
+        async function saveProductionSheet(isOrderMode = false) {
+            const { canvas, fileName } = await buildProductionCanvas(isOrderMode);
+            const link = document.createElement('a');
+            link.download = fileName;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
 
-        function orderWhatsApp() {
-            const items = getActiveItemsForPricing();
-            const totalPrintPrice = items.reduce((sum, item) => sum + item.printPrice, 0);
+        function buildOrderMessageText(items, totalPrintPrice) {
             const prodName = productNames[currentProduct];
             const bgNote = isBgRemoved ? ' (مع تفريغ الخلفية)' : '';
-
             const lines = items.map(i => `• ${i.angleLabel}: ${i.wCm} × ${i.hCm} سم — طباعة: ${i.printPrice} ﷼${i.customMoved ? ' [موضع مخصص]' : ''}`).join('\n');
-            const text = `السلام عليكم، اعتمدت طلب الطباعة في الاستوديو:\n- القطعة: ${prodName}\n- اللون: ${currentColorName}${bgNote}\n- الجهات والمقاسات المعتمدة:\n${lines}\n- إجمالي سعر الطباعة فقط: ${totalPrintPrice} ﷼ (غير شامل سعر القطعة)`;
+            return `السلام عليكم، اعتمدت طلب الطباعة في الاستوديو:\n- القطعة: ${prodName}\n- اللون: ${currentColorName}${bgNote}\n- الجهات والمقاسات المعتمدة:\n${lines}\n- إجمالي سعر الطباعة فقط: ${totalPrintPrice} ﷼ (غير شامل سعر القطعة)`;
+        }
+
+        async function sendOrderWithProductionImage() {
+            const { canvas, blob, fileName, items, totalPrintPrice } = await buildProductionCanvas(true);
+            const text = buildOrderMessageText(items, totalPrintPrice);
+            const hint = document.getElementById('status-hint');
+
+            if (blob && navigator.canShare) {
+                const file = new File([blob], fileName, { type: 'image/png' });
+                if (navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            title: 'ملف إنتاج وطلب طباعة - عِزوة',
+                            text: text,
+                            files: [file]
+                        });
+                        hint.innerText = 'تم تجهيز ومشاركة صورة الإنتاج مع تفاصيل الطلب.';
+                        return;
+                    } catch (err) {
+                        if (err && err.name === 'AbortError') {
+                            hint.innerText = 'تم إلغاء المشاركة؛ يمكنك المحاولة مرة أخرى.';
+                            return;
+                        }
+                    }
+                }
+            }
+
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            hint.innerText = 'تم تنزيل صورة الإنتاج؛ أرفقها داخل محادثة واتساب لإرسالها مع الطلب.';
             const url = `https://wa.me/966502777884?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
@@ -1282,6 +1340,7 @@
                 printBox.style.left = xPercent + '%';
                 printBox.style.top = yPercent + '%';
                 customMoved = true;
+                syncSavedAngleIfPresent();
             }
         });
 
