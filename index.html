@@ -157,7 +157,6 @@
                 </div>
             </div>
 
-            <!-- التطوير (4): مبدل القطعة (هودي / تيشيرت بوكسي) -->
             <div class="glass-panel p-1 rounded-xl flex gap-1">
                 <button id="prod-hoodie" onclick="setProduct('hoodie')" class="prod-btn active px-2.5 py-1 rounded-lg text-[11px] transition">هودي</button>
                 <button id="prod-tshirt" onclick="setProduct('tshirt')" class="prod-btn px-2.5 py-1 rounded-lg text-[11px] text-stone-300 transition">تيشيرت بوكسي</button>
@@ -175,7 +174,6 @@
     <!-- منطقة العرض الوسطى -->
     <main id="main-area" class="flex-1 flex flex-col items-center justify-center w-full relative z-10 px-4 min-h-0">
         
-        <!-- التطوير (3): شريط مؤشر جودة الطباعة DPI -->
         <div id="dpi-banner" class="mb-1.5 px-3 py-0.5 rounded-full glass-panel flex items-center gap-1.5 text-[10px]">
             <span id="dpi-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span id="dpi-text" class="text-stone-200 font-semibold">جودة التصميم: ممتازة للطباعة (300 DPI)</span>
@@ -196,7 +194,7 @@
             </div>
         </div>
 
-        <!-- أدوات التحكم الجانبية (الألوان + رفع + تفريغ الخلفية + قفل التناسب + توسيط) -->
+        <!-- أدوات التحكم الجانبية -->
         <div class="fixed left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1.5">
             <div class="glass-panel p-1.5 rounded-xl flex flex-col items-center gap-1.5">
                 <span class="text-[9px] text-stone-400">اللون</span>
@@ -215,7 +213,6 @@
                 <input type="file" accept="image/*" class="hidden" onchange="uploadDesign(event)">
             </label>
 
-            <!-- التطوير (3): زر تفريغ الخلفية البيضاء تلقائياً -->
             <button id="btn-remove-bg" onclick="toggleRemoveWhiteBg()" class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center hover:border-[#D4AF37] transition text-center" title="إزالة الخلفية البيضاء من الشعار">
                 <span class="text-xs mb-0.5">✨</span>
                 <span id="bg-btn-text" class="text-[8px] font-bold text-stone-300 leading-tight">تفريغ<br>الأبيض</span>
@@ -272,7 +269,6 @@
                 </div>
             </div>
 
-            <!-- التطوير (5): زر حفظ ملف الإنتاج المتكامل للمطبعة + زر واتساب -->
             <div class="grid grid-cols-3 gap-2">
                 <button onclick="saveProductionSheet()" class="col-span-1 py-2 px-2 rounded-xl bg-stone-800 border border-[#D4AF37]/60 text-[#D4AF37] font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 hover:bg-stone-700 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -298,7 +294,6 @@
         let designNaturalW = 1200;
         let designNaturalH = 1200;
 
-        // توليد صورة بديلة للتيشيرت البوكسي في حال عدم رفع صور تيشيرت منفصلة بعد
         function generateTshirtFallback(angle) {
             const c = document.createElement('canvas');
             c.width = 600; c.height = 600;
@@ -309,7 +304,6 @@
             ctx.fillStyle = '#f2f2f2';
             ctx.beginPath();
             if (angle === 'front' || angle === 'back') {
-                // قصة تيشيرت بوكسي فيت (أكتاف عريضة وأكمام نصفية واسعة)
                 ctx.moveTo(220, 110);
                 ctx.lineTo(380, 110);
                 ctx.lineTo(520, 175);
@@ -323,7 +317,6 @@
                 ctx.closePath();
                 ctx.fill();
 
-                // ياقة دائرية سميكة
                 ctx.strokeStyle = '#d4d4d4';
                 ctx.lineWidth = 8;
                 ctx.beginPath();
@@ -331,7 +324,6 @@
                 else ctx.arc(300, 110, 52, 0.05 * Math.PI, 0.95 * Math.PI);
                 ctx.stroke();
             } else {
-                // عرض جانبي للتيشيرت البوكسي
                 ctx.moveTo(240, 115);
                 ctx.lineTo(360, 115);
                 ctx.lineTo(395, 280);
@@ -404,7 +396,6 @@
             side_left:  'الكم الأيسر'
         };
 
-        // مقاسات مخصصة لكل قطعة (التيشيرت يسمح بـ A3 في الصدر لعدم وجود جيب كنغر)
         const productSizes = {
             hoodie: {
                 front: [
@@ -458,7 +449,6 @@
             }
         };
 
-        // التطوير (3): فحص دقة الصورة DPI بالنسبة للمقاس بالسنتيمتر
         function checkPrintDPI() {
             const wInches = currentWcm / 2.54;
             const hInches = currentHcm / 2.54;
@@ -484,7 +474,6 @@
             }
         }
 
-        // التطوير (3): إزالة الخلفية البيضاء تلقائياً وتحويلها لشفافة
         function toggleRemoveWhiteBg() {
             const btn = document.getElementById('btn-remove-bg');
             const txt = document.getElementById('bg-btn-text');
@@ -500,6 +489,7 @@
                 printBox.classList.add('transparent-bg');
 
                 const tempImg = new Image();
+                tempImg.crossOrigin = 'anonymous';
                 tempImg.onload = function() {
                     const c = document.createElement('canvas');
                     c.width = tempImg.naturalWidth;
@@ -511,7 +501,6 @@
 
                     for (let i = 0; i < d.length; i += 4) {
                         const r = d[i], g = d[i + 1], b = d[i + 2];
-                        // تحويل البكسلات البيضاء أو القريبة جداً من الأبيض إلى شفافة
                         if (r > 235 && g > 235 && b > 235) {
                             d[i + 3] = 0;
                         }
@@ -729,45 +718,49 @@
             btn.classList.add('active');
         }
 
+        function applyLoadedDesign(srcUrl) {
+            const tempImg = new Image();
+            tempImg.crossOrigin = 'anonymous';
+            tempImg.onload = function() {
+                hasUserUploadedDesign = true;
+                designNaturalW = tempImg.naturalWidth;
+                designNaturalH = tempImg.naturalHeight;
+                designAspectRatio = designNaturalW / designNaturalH;
+                originalDesignDataUrl = srcUrl;
+                isBgRemoved = false;
+                document.getElementById('btn-remove-bg').classList.remove('border-[#D4AF37]');
+                document.getElementById('bg-btn-text').classList.remove('gold-accent');
+                document.getElementById('print-box').classList.remove('transparent-bg');
+
+                const printImg = document.getElementById('print-img');
+                printImg.crossOrigin = 'anonymous';
+                printImg.src = originalDesignDataUrl;
+                setPrintSelected(true);
+                if (currentMode === 'presets') selectSize(currentSizeIndex);
+                else applyManualCm('w');
+            };
+            tempImg.src = srcUrl;
+        }
+
         function uploadDesign(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const tempImg = new Image();
-                tempImg.onload = function() {
-                    hasUserUploadedDesign = true;
-                    designNaturalW = tempImg.naturalWidth;
-                    designNaturalH = tempImg.naturalHeight;
-                    designAspectRatio = designNaturalW / designNaturalH;
-                    originalDesignDataUrl = e.target.result;
-                    isBgRemoved = false;
-                    document.getElementById('btn-remove-bg').classList.remove('border-[#D4AF37]');
-                    document.getElementById('bg-btn-text').classList.remove('gold-accent');
-                    document.getElementById('print-box').classList.remove('transparent-bg');
-
-                    document.getElementById('print-img').src = originalDesignDataUrl;
-                    setPrintSelected(true);
-                    if (currentMode === 'presets') selectSize(currentSizeIndex);
-                    else applyManualCm('w');
-                };
-                tempImg.src = e.target.result;
+                applyLoadedDesign(e.target.result);
             };
             reader.readAsDataURL(file);
         }
 
-        // التطوير (5): توليد ورقة إنتاج متكاملة وجاهزة للمطبعة (Production Spec Sheet)
         function saveProductionSheet() {
             const canvas = document.createElement('canvas');
             canvas.width = 1200;
             canvas.height = 1360;
             const ctx = canvas.getContext('2d');
 
-            // خلفية داكنة فاخرة
             ctx.fillStyle = '#0d0d0d';
             ctx.fillRect(0, 0, 1200, 1360);
 
-            // ترويسة ملف الإنتاج
             ctx.fillStyle = '#181615';
             ctx.fillRect(0, 0, 1200, 110);
             ctx.strokeStyle = '#D4AF37';
@@ -779,7 +772,6 @@
             ctx.textAlign = 'right';
             ctx.fillText('عِزوة | ورقة مواصفات الإنتاج والطباعة (Production Sheet)', 1160, 68);
 
-            // القسم الأيمن: معاينة القطعة بالكامل (750 × 750)
             const garmentEl = document.getElementById('garment-img');
             const printEl = document.getElementById('print-img');
             const printBox = document.getElementById('print-box');
@@ -817,7 +809,6 @@
             ctx.drawImage(printEl, drawX, drawY, drawW, drawH);
             ctx.restore();
 
-            // القسم الأيسر: نافذة معاينة ملف الطباعة الصافي (350 × 350)
             ctx.fillStyle = '#181615';
             ctx.fillRect(40, 140, 350, 420);
             ctx.strokeStyle = 'rgba(212,175,55,0.4)';
@@ -828,14 +819,12 @@
             ctx.textAlign = 'center';
             ctx.fillText('ملف الطباعة الصافي (Artwork)', 215, 180);
 
-            // رسم التصميم الصافي متناسباً داخل المربع
             const boxSize = 270;
             let artW = boxSize, artH = boxSize;
             if (designAspectRatio >= 1) artH = boxSize / designAspectRatio;
             else artW = boxSize * designAspectRatio;
             ctx.drawImage(printEl, 40 + (350 - artW) / 2, 210 + (300 - artH) / 2, artW, artH);
 
-            // بطاقة الحالة التقنية أسفل الملف الصافي
             ctx.fillStyle = '#181615';
             ctx.fillRect(40, 580, 350, 300);
             ctx.strokeRect(40, 580, 350, 300);
@@ -851,7 +840,6 @@
             ctx.fillText(`• نوع الطباعة: DTF عالي الثبات`, 365, 750);
             ctx.fillText(`• الموضع: ${customMoved ? 'مخصص يدوياً' : 'قياسي موزون'}`, 365, 790);
 
-            // جدول المواصفات السفلي للمطبعة
             ctx.fillStyle = '#181615';
             ctx.fillRect(40, 910, 1120, 410);
             ctx.strokeStyle = '#D4AF37';
@@ -887,11 +875,22 @@
             const posNote = customMoved ? ' (موضع مخصص)' : '';
             const bgNote = isBgRemoved ? ' (مع تفريغ الخلفية)' : '';
             const text = `السلام عليكم، اعتمدت طلب الطباعة في الاستوديو:\n- القطعة: ${prodName}\n- اللون: ${currentColorName}\n- الجهة: ${faceName}${posNote}\n- المقاس: ${modeText}\n- الأبعاد الدقيقة: ${currentWcm} × ${currentHcm} سم${bgNote}`;
-            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            const url = `https://wa.me/966502777884?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
 
         setAngle('front');
+
+        // استقبال التصميم القادم من الكتالوج تلقائياً
+        (function loadDesignFromCatalog() {
+            const params = new URLSearchParams(window.location.search);
+            const designUrl = params.get('design');
+            if (designUrl) {
+                setProduct('tshirt');
+                setAngle('back');
+                applyLoadedDesign(designUrl);
+            }
+        })();
 
         const stage = document.getElementById('stage');
         const mainArea = document.getElementById('main-area');
