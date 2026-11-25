@@ -276,6 +276,8 @@
                 <div class="flex items-center gap-1.5 bg-black/40 px-2.5 py-1 rounded-lg border border-stone-800">
                     <span id="paper-name-label" class="text-[10.5px] text-stone-300">شعار صدر:</span>
                     <span id="size-label" class="text-[11px] gold-accent font-bold" dir="ltr">8.0 × 8.0 cm</span>
+                    <span class="text-stone-600">|</span>
+                    <span id="price-label" class="text-[11px] text-emerald-400 font-bold">طباعة: 5 ﷼</span>
                 </div>
             </div>
 
@@ -288,12 +290,12 @@
                     <p class="text-[10.5px] text-stone-300">اسحب زوايا التصميم أو أدخل المقاس بالسنتيمتر:</p>
                     <div class="flex items-center gap-2" dir="ltr">
                         <div class="flex items-center gap-1">
-                            <input id="input-w-cm" type="number" step="0.5" min="2" max="35" value="8" onchange="applyManualCm('w')" class="w-14 bg-stone-900 border border-stone-700 rounded-lg px-1.5 py-1 text-center text-xs text-white focus:border-[#D4AF37] outline-none">
+                            <input id="input-w-cm" type="number" step="0.5" min="2" max="45" value="8" onchange="applyManualCm('w')" class="w-14 bg-stone-900 border border-stone-700 rounded-lg px-1.5 py-1 text-center text-xs text-white focus:border-[#D4AF37] outline-none">
                             <span class="text-[10px] text-stone-400">W</span>
                         </div>
                         <span class="text-stone-500 text-xs">×</span>
                         <div class="flex items-center gap-1">
-                            <input id="input-h-cm" type="number" step="0.5" min="2" max="45" value="8" onchange="applyManualCm('h')" class="w-14 bg-stone-900 border border-stone-700 rounded-lg px-1.5 py-1 text-center text-xs text-white focus:border-[#D4AF37] outline-none">
+                            <input id="input-h-cm" type="number" step="0.5" min="2" max="55" value="8" onchange="applyManualCm('h')" class="w-14 bg-stone-900 border border-stone-700 rounded-lg px-1.5 py-1 text-center text-xs text-white focus:border-[#D4AF37] outline-none">
                             <span class="text-[10px] text-stone-400">H (cm)</span>
                         </div>
                     </div>
@@ -309,7 +311,7 @@
                 </button>
 
                 <button onclick="orderWhatsApp()" class="col-span-2 py-2 px-3 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
-                    <span>اعتماد المقاس والطلب عبر واتساب</span>
+                    <span id="wa-order-label">اعتماد المقاس والطلب عبر واتساب</span>
                 </button>
             </div>
         </div>
@@ -331,6 +333,50 @@
         let zoomIdx = 0;
         let panX = 0;
         let panY = 0;
+
+        // جدول تسعيرة الطباعة للجهة الواحدة بناءً على أكبر ضلع بالسنتيمتر (بالريال السعودي)
+        function calculatePrintPrice(wCm, hCm) {
+            const maxSide = Math.max(Number(wCm) || 0, Number(hCm) || 0);
+            if (maxSide <= 4) {
+                return { tier: 'ليبل (Label)', price: 2 };
+            }
+            if (maxSide <= 10) {
+                return { tier: 'لوجو (Logo)', price: 5 };
+            }
+            if (maxSide <= 21) {
+                return { tier: 'مقاس A5', price: 10 };
+            }
+            if (maxSide <= 29.7) {
+                return { tier: 'مقاس A4', price: 15 };
+            }
+            if (maxSide <= 42) {
+                return { tier: 'مقاس A3', price: 20 };
+            }
+            return { tier: 'مقاس A2', price: 25 };
+        }
+
+        function getActiveItemsForPricing() {
+            const orderKeys = ['front', 'side_right', 'back', 'side_left'].filter(k => Boolean(savedAnglesState[k]));
+            return orderKeys.length > 0 ? orderKeys.map(k => savedAnglesState[k]) : [buildAngleSnapshot(currentAngle)];
+        }
+
+        function updatePriceSummaryUI() {
+            const currentPricing = calculatePrintPrice(currentWcm, currentHcm);
+            const items = getActiveItemsForPricing();
+            const totalPrintPrice = items.reduce((sum, item) => sum + item.printPrice, 0);
+            const keysCount = Object.keys(savedAnglesState).length;
+
+            const priceLabel = document.getElementById('price-label');
+            const waLabel = document.getElementById('wa-order-label');
+
+            if (keysCount > 1) {
+                priceLabel.innerText = `إجمالي الطباعة: ${totalPrintPrice} ﷼`;
+            } else {
+                priceLabel.innerText = `طباعة: ${currentPricing.price} ﷼`;
+            }
+
+            waLabel.innerText = `اعتماد والطلب عبر واتساب (${totalPrintPrice} ﷼ طباعة)`;
+        }
 
         function loadImageSafe(src, fallbackSrc) {
             return new Promise((resolve) => {
@@ -579,6 +625,8 @@
                 saveTxt.innerText = `حفظ ${shortAngleNames[currentAngle]}`;
                 saveBtn.classList.remove('bg-emerald-950/50');
             }
+
+            updatePriceSummaryUI();
         }
 
         function clearSavedAngles() {
@@ -590,12 +638,15 @@
             const box = document.getElementById('print-box');
             const list = productSizes[currentProduct][angKey];
             const cfg = list[currentSizeIndex] || list[0];
+            const pricing = calculatePrintPrice(currentWcm, currentHcm);
             return {
                 angle: angKey,
                 angleLabel: angleNames[angKey],
                 sizeIndex: currentSizeIndex,
                 sizeShort: currentMode === 'free' ? 'مقاس حر مخصص' : cfg.short,
                 sizeLabel: currentMode === 'free' ? 'مقاس حر' : cfg.label,
+                priceTier: pricing.tier,
+                printPrice: pricing.price,
                 top: box.style.top || cfg.top,
                 left: box.style.left || cfg.left,
                 width: box.style.width || (currentWcm * CM_TO_PERCENT) + '%',
@@ -740,6 +791,7 @@
             document.getElementById('input-h-cm').value = currentHcm;
 
             checkPrintDPI();
+            updatePriceSummaryUI();
         }
 
         function switchMode(mode) {
@@ -779,8 +831,8 @@
                 else w = h * designAspectRatio;
             }
 
-            w = Math.max(2, Math.min(35, w));
-            h = Math.max(2, Math.min(45, h));
+            w = Math.max(2, Math.min(45, w));
+            h = Math.max(2, Math.min(55, h));
             document.getElementById('print-box').classList.add('smooth-resize');
             updateDimensionsUI(w, h, 'مقاس حر');
         }
@@ -939,7 +991,7 @@
             ctx.lineWidth = 2;
             ctx.strokeRect(x, y, w, h);
 
-            const stageSize = Math.min(w - 40, h - 135);
+            const stageSize = Math.min(w - 40, h - 145);
             const stageX = x + (w - stageSize) / 2;
             const stageY = y + 18;
 
@@ -987,25 +1039,29 @@
             ctx.textAlign = 'right';
             ctx.fillStyle = '#D4AF37';
             ctx.font = 'bold 23px Cairo, sans-serif';
-            ctx.fillText(`${item.angleLabel} — ${item.wCm} × ${item.hCm} سم`, x + w - 22, stageY + stageSize + 38);
+            ctx.fillText(`${item.angleLabel} — ${item.wCm} × ${item.hCm} سم`, x + w - 22, stageY + stageSize + 36);
+
+            ctx.fillStyle = '#34d399';
+            ctx.font = 'bold 19px Cairo, sans-serif';
+            ctx.fillText(`سعر الطباعة: ${item.printPrice} ﷼ (${item.priceTier})`, x + w - 22, stageY + stageSize + 68);
 
             ctx.fillStyle = '#d6d3d1';
-            ctx.font = '17px Cairo, sans-serif';
-            ctx.fillText(`اللون: ${item.colorName} | المقاس: ${item.sizeShort}`, x + w - 22, stageY + stageSize + 72);
+            ctx.font = '16px Cairo, sans-serif';
+            ctx.fillText(`اللون: ${item.colorName} | المقاس: ${item.sizeShort}`, x + w - 22, stageY + stageSize + 96);
         }
 
         async function saveProductionSheet() {
-            const orderKeys = ['front', 'side_right', 'back', 'side_left'].filter(k => Boolean(savedAnglesState[k]));
-            const items = orderKeys.length > 0 ? orderKeys.map(k => savedAnglesState[k]) : [buildAngleSnapshot(currentAngle)];
+            const items = getActiveItemsForPricing();
+            const totalPrintPrice = items.reduce((sum, item) => sum + item.printPrice, 0);
 
             const cols = items.length > 1 ? 2 : 1;
             const rows = Math.ceil(items.length / cols);
             const cardW = 560;
-            const cardH = 620;
+            const cardH = 640;
             const gap = 24;
 
             const canvasW = cols === 2 ? (cardW * 2 + gap * 3) : 1200;
-            const summaryH = 210;
+            const summaryH = 225;
             const headerH = 105;
             const canvasH = headerH + (rows * cardH) + ((rows + 1) * gap) + summaryH;
 
@@ -1040,25 +1096,29 @@
 
             const sumY = headerH + gap + rows * (cardH + gap);
             ctx.fillStyle = '#181615';
-            ctx.fillRect(gap, sumY, canvasW - gap * 2, 175);
+            ctx.fillRect(gap, sumY, canvasW - gap * 2, 190);
             ctx.strokeStyle = '#D4AF37';
             ctx.lineWidth = 2;
-            ctx.strokeRect(gap, sumY, canvasW - gap * 2, 175);
+            ctx.strokeRect(gap, sumY, canvasW - gap * 2, 190);
 
             ctx.direction = 'rtl';
             ctx.textAlign = 'right';
             ctx.fillStyle = '#D4AF37';
             ctx.font = 'bold 24px Cairo, sans-serif';
-            ctx.fillText(`القطعة: ${productNames[currentProduct]} | اللون: ${currentColorName} | الطباعة: DTF`, canvasW - gap - 24, sumY + 48);
+            ctx.fillText(`القطعة: ${productNames[currentProduct]} | اللون: ${currentColorName} | الطباعة: DTF`, canvasW - gap - 24, sumY + 46);
+
+            ctx.fillStyle = '#34d399';
+            ctx.font = 'bold 22px Cairo, sans-serif';
+            ctx.fillText(`إجمالي سعر الطباعة فقط: ${totalPrintPrice} ﷼ (غير شامل سعر القطعة)`, canvasW - gap - 24, sumY + 86);
 
             ctx.fillStyle = '#f5f5f4';
-            ctx.font = '20px Cairo, sans-serif';
-            const dimsSummary = items.map(i => `${i.angleLabel}: (${i.wCm}×${i.hCm} سم)`).join('  •  ');
-            ctx.fillText(`الأبعاد المعتمدة: ${dimsSummary}`, canvasW - gap - 24, sumY + 95);
+            ctx.font = '19px Cairo, sans-serif';
+            const dimsSummary = items.map(i => `${i.angleLabel}: ${i.wCm}×${i.hCm} سم (${i.printPrice} ﷼)`).join('  •  ');
+            ctx.fillText(`التفاصيل: ${dimsSummary}`, canvasW - gap - 24, sumY + 126);
 
             ctx.fillStyle = '#a8a29e';
-            ctx.font = '18px Cairo, sans-serif';
-            ctx.fillText(`تفريغ الخلفية: ${isBgRemoved ? 'مفعل (شفاف)' : 'أصلي'}  |  الدقة: ${document.getElementById('dpi-text').innerText.split('(')[1]?.replace(')', '') || '300 DPI'}`, canvasW - gap - 24, sumY + 138);
+            ctx.font = '17px Cairo, sans-serif';
+            ctx.fillText(`تفريغ الخلفية: ${isBgRemoved ? 'مفعل (شفاف)' : 'أصلي'}  |  الدقة: ${document.getElementById('dpi-text').innerText.split('(')[1]?.replace(')', '') || '300 DPI'}`, canvasW - gap - 24, sumY + 162);
 
             const link = document.createElement('a');
             const tagName = items.length > 1 ? `Complete-${items.length}sides` : `${currentAngle}-${currentWcm}x${currentHcm}cm`;
@@ -1068,13 +1128,13 @@
         }
 
         function orderWhatsApp() {
-            const orderKeys = ['front', 'side_right', 'back', 'side_left'].filter(k => Boolean(savedAnglesState[k]));
-            const items = orderKeys.length > 0 ? orderKeys.map(k => savedAnglesState[k]) : [buildAngleSnapshot(currentAngle)];
+            const items = getActiveItemsForPricing();
+            const totalPrintPrice = items.reduce((sum, item) => sum + item.printPrice, 0);
             const prodName = productNames[currentProduct];
             const bgNote = isBgRemoved ? ' (مع تفريغ الخلفية)' : '';
 
-            const lines = items.map(i => `• ${i.angleLabel}: ${i.sizeShort} (${i.wCm} × ${i.hCm} سم)${i.customMoved ? ' - موضع مخصص' : ''}`).join('\n');
-            const text = `السلام عليكم، اعتمدت طلب الطباعة في الاستوديو:\n- القطعة: ${prodName}\n- اللون: ${currentColorName}${bgNote}\n- الجهات والمقاسات:\n${lines}`;
+            const lines = items.map(i => `• ${i.angleLabel}: ${i.sizeShort} (${i.wCm} × ${i.hCm} سم) — طباعة: ${i.printPrice} ﷼${i.customMoved ? ' [موضع مخصص]' : ''}`).join('\n');
+            const text = `السلام عليكم، اعتمدت طلب الطباعة في الاستوديو:\n- القطعة: ${prodName}\n- اللون: ${currentColorName}${bgNote}\n- الجهات والمقاسات:\n${lines}\n- إجمالي سعر الطباعة فقط: ${totalPrintPrice} ﷼ (غير شامل سعر القطعة)`;
             const url = `https://wa.me/966502777884?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
@@ -1174,8 +1234,8 @@
                     newHcm = newWcm / designAspectRatio;
                 }
 
-                newWcm = Math.max(2.5, Math.min(32, newWcm));
-                newHcm = Math.max(2.5, Math.min(42, newHcm));
+                newWcm = Math.max(2.5, Math.min(45, newWcm));
+                newHcm = Math.max(2.5, Math.min(55, newHcm));
 
                 updateDimensionsUI(newWcm, newHcm, 'مقاس حر');
                 return;
