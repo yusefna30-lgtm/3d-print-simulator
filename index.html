@@ -881,13 +881,11 @@
 
         setAngle('front');
 
-        // استقبال التصميم القادم من الكتالوج تلقائياً
+        // استقبال التصميم القادم من الكتالوج مع الإبقاء على الهودي كخيار افتراضي
         (function loadDesignFromCatalog() {
             const params = new URLSearchParams(window.location.search);
             const designUrl = params.get('design');
             if (designUrl) {
-                setProduct('tshirt');
-                setAngle('back');
                 applyLoadedDesign(designUrl);
             }
         })();
