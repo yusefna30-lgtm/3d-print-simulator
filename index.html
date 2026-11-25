@@ -232,7 +232,6 @@
             </button>
         </div>
 
-        <!-- زر حفظ الجهة الحالية قبل الانتقال لجهة أخرى أو التصدير -->
         <div class="mt-1 w-full max-w-md flex justify-center">
             <button id="btn-save-angle" onclick="saveCurrentAngle()" class="w-full py-1 px-3 rounded-xl glass-panel border border-emerald-400/50 text-emerald-300 font-bold text-[10.5px] flex items-center justify-center gap-1.5 hover:bg-emerald-950/40 transition">
                 <span id="save-angle-icon">💾</span>
@@ -327,6 +326,26 @@
         let zoomIdx = 0;
         let panX = 0;
         let panY = 0;
+
+        function loadImageSafe(src, fallbackSrc) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => resolve(img);
+                img.onerror = () => {
+                    if (fallbackSrc && fallbackSrc !== src) {
+                        const fb = new Image();
+                        fb.crossOrigin = 'anonymous';
+                        fb.onload = () => resolve(fb);
+                        fb.onerror = () => resolve(null);
+                        fb.src = fallbackSrc;
+                    } else {
+                        resolve(null);
+                    }
+                };
+                img.src = src;
+            });
+        }
 
         function applyStageTransform() {
             const scale = zoomLevels[zoomIdx];
@@ -583,7 +602,6 @@
             };
         }
 
-        // حفظ يدوي صريح للجهة الحالية عند ضغط زر الحفظ
         function saveCurrentAngle() {
             savedAnglesState[currentAngle] = buildAngleSnapshot(currentAngle);
             updateSaveButtonUI();
@@ -904,7 +922,7 @@
             reader.readAsDataURL(file);
         }
 
-        function drawSingleAngleCard(ctx, item, x, y, w, h) {
+        async function drawSingleAngleCard(ctx, item, x, y, w, h) {
             ctx.fillStyle = '#181615';
             ctx.fillRect(x, y, w, h);
             ctx.strokeStyle = 'rgba(212,175,55,0.45)';
@@ -918,9 +936,15 @@
             ctx.fillStyle = '#000000';
             ctx.fillRect(stageX, stageY, stageSize, stageSize);
 
-            const angleImg = new Image();
-            angleImg.src = productImages[currentProduct][item.angle];
-            try { ctx.drawImage(angleImg, stageX, stageY, stageSize, stageSize); } catch (e) {}
+            const fallbackSrc = currentProduct === 'tshirt' ? generateTshirtFallback(item.angle) : null;
+            const [angleImg, artImg] = await Promise.all([
+                loadImageSafe(productImages[currentProduct][item.angle], fallbackSrc),
+                loadImageSafe(item.imgSrc, null)
+            ]);
+
+            if (angleImg) {
+                ctx.drawImage(angleImg, stageX, stageY, stageSize, stageSize);
+            }
 
             if (item.colorHex !== 'transparent') {
                 ctx.save();
@@ -940,28 +964,27 @@
             const drawX = stageX + (leftPct * stageSize) - (drawW / 2);
             const drawY = stageY + (topPct * stageSize) - (drawH / 2);
 
-            const artImg = new Image();
-            artImg.crossOrigin = 'anonymous';
-            artImg.src = item.imgSrc;
-
-            ctx.save();
-            if (!item.isBgRemoved && (item.colorHex === 'transparent' || item.colorHex === '#d8cab3')) {
-                ctx.globalCompositeOperation = 'multiply';
+            if (artImg) {
+                ctx.save();
+                if (!item.isBgRemoved && (item.colorHex === 'transparent' || item.colorHex === '#d8cab3')) {
+                    ctx.globalCompositeOperation = 'multiply';
+                }
+                ctx.drawImage(artImg, drawX, drawY, drawW, drawH);
+                ctx.restore();
             }
-            try { ctx.drawImage(artImg, drawX, drawY, drawW, drawH); } catch (e) {}
-            ctx.restore();
 
-            ctx.fillStyle = '#D4AF37';
-            ctx.font = 'bold 24px Cairo, sans-serif';
+            ctx.direction = 'rtl';
             ctx.textAlign = 'right';
+            ctx.fillStyle = '#D4AF37';
+            ctx.font = 'bold 23px Cairo, sans-serif';
             ctx.fillText(`${item.angleLabel} — ${item.wCm} × ${item.hCm} سم`, x + w - 22, stageY + stageSize + 38);
 
             ctx.fillStyle = '#d6d3d1';
-            ctx.font = '18px Cairo, sans-serif';
+            ctx.font = '17px Cairo, sans-serif';
             ctx.fillText(`اللون: ${item.colorName} | المقاس: ${item.sizeShort}`, x + w - 22, stageY + stageSize + 72);
         }
 
-        function saveProductionSheet() {
+        async function saveProductionSheet() {
             const orderKeys = ['front', 'side_right', 'back', 'side_left'].filter(k => Boolean(savedAnglesState[k]));
             const items = orderKeys.length > 0 ? orderKeys.map(k => savedAnglesState[k]) : [buildAngleSnapshot(currentAngle)];
 
@@ -980,6 +1003,7 @@
             canvas.width = canvasW;
             canvas.height = canvasH;
             const ctx = canvas.getContext('2d');
+            ctx.direction = 'rtl';
 
             ctx.fillStyle = '#0d0d0d';
             ctx.fillRect(0, 0, canvasW, canvasH);
@@ -995,13 +1019,14 @@
             ctx.textAlign = 'right';
             ctx.fillText(`عِزوة | ملف الإنتاج المكتمل (${items.length} ${items.length > 1 ? 'جهات' : 'جهة'})`, canvasW - 32, 65);
 
-            items.forEach((item, idx) => {
+            for (let idx = 0; idx < items.length; idx++) {
+                const item = items[idx];
                 const cIdx = idx % cols;
                 const rIdx = Math.floor(idx / cols);
                 const x = cols === 2 ? (gap + cIdx * (cardW + gap)) : ((canvasW - cardW) / 2);
                 const y = headerH + gap + rIdx * (cardH + gap);
-                drawSingleAngleCard(ctx, item, x, y, cardW, cardH);
-            });
+                await drawSingleAngleCard(ctx, item, x, y, cardW, cardH);
+            }
 
             const sumY = headerH + gap + rows * (cardH + gap);
             ctx.fillStyle = '#181615';
@@ -1010,9 +1035,10 @@
             ctx.lineWidth = 2;
             ctx.strokeRect(gap, sumY, canvasW - gap * 2, 175);
 
+            ctx.direction = 'rtl';
+            ctx.textAlign = 'right';
             ctx.fillStyle = '#D4AF37';
             ctx.font = 'bold 24px Cairo, sans-serif';
-            ctx.textAlign = 'right';
             ctx.fillText(`القطعة: ${productNames[currentProduct]} | اللون: ${currentColorName} | الطباعة: DTF`, canvasW - gap - 24, sumY + 48);
 
             ctx.fillStyle = '#f5f5f4';
