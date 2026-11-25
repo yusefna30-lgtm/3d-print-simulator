@@ -207,14 +207,8 @@
             </div>
         </div>
 
-        <!-- شبكة خماسية متساوية العرض في صف واحد أسفل الصورة دون أي تداخل -->
-        <div class="mt-1.5 w-full max-w-md grid grid-cols-5 gap-1">
-            <label class="glass-panel py-1 px-1 rounded-lg text-[9.5px] font-bold text-white flex items-center justify-center gap-0.5 cursor-pointer hover:border-[#D4AF37] transition truncate">
-                <span>⬆</span>
-                <span>رفع</span>
-                <input type="file" accept="image/*" class="hidden" onchange="uploadDesign(event)">
-            </label>
-
+        <!-- شريط أزرار مضغوط في صف واحد أسفل الصورة دون أي تداخل -->
+        <div class="mt-1.5 w-full max-w-md grid grid-cols-4 gap-1">
             <button id="btn-stage-zoom" onclick="cycleStageZoom()" class="glass-panel py-1 px-1 rounded-lg text-[9.5px] font-bold text-stone-200 flex items-center justify-center gap-0.5 transition truncate">
                 <span>🔍</span>
                 <span id="zoom-btn-text">تكبير</span>
@@ -236,8 +230,16 @@
             </button>
         </div>
 
-        <!-- شريط الألوان الجانبي فقط -->
-        <div class="fixed left-2 top-1/2 -translate-y-1/2 z-20">
+        <!-- العمود الجانبي: زر ارفع تصميمك فوق صندوق الألوان مباشرة -->
+        <div class="fixed left-2 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1.5">
+            <label class="glass-panel p-1.5 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#D4AF37] transition text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4 gold-accent mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <span class="text-[8px] font-bold text-white leading-tight">ارفع<br>تصميمك</span>
+                <input type="file" accept="image/*" class="hidden" onchange="uploadDesign(event)">
+            </label>
+
             <div class="glass-panel p-1 rounded-xl flex flex-col items-center gap-1">
                 <span class="text-[8.5px] text-stone-400">اللون</span>
                 <button onclick="setColor('transparent', 'أبيض', false, this)" class="color-dot active w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#ffffff] border border-stone-500 transition" title="أبيض"></button>
