@@ -36,6 +36,9 @@
             color: #121212;
             font-weight: 700;
         }
+        .angle-btn.has-saved {
+            box-shadow: inset 0 -2px 0 #D4AF37;
+        }
         .color-dot.active {
             outline: 2px solid #D4AF37;
             outline-offset: 2px;
@@ -188,6 +191,7 @@
             <span id="dpi-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span id="dpi-text" class="text-stone-200 font-semibold">جودة التصميم: ممتازة للطباعة (300 DPI)</span>
             <span id="zoom-indicator" class="hidden mr-1 px-1.5 py-0.2 rounded bg-[#D4AF37]/20 text-[#D4AF37] font-bold" dir="ltr">1.5x</span>
+            <span id="saved-angles-badge" class="hidden mr-1 px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">0 جهات محفوظة</span>
         </div>
 
         <div id="stage" class="mockup-stage cursor-grab active:cursor-grabbing">
@@ -289,11 +293,11 @@
             </div>
 
             <div class="grid grid-cols-3 gap-2">
-                <button onclick="saveProductionSheet()" class="col-span-1 py-2 px-2 rounded-xl bg-stone-800 border border-[#D4AF37]/60 text-[#D4AF37] font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 hover:bg-stone-700 transition">
+                <button id="btn-prod-sheet" onclick="saveProductionSheet()" class="col-span-1 py-2 px-2 rounded-xl bg-stone-800 border border-[#D4AF37]/60 text-[#D4AF37] font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 hover:bg-stone-700 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <span>ملف الإنتاج</span>
+                    <span id="prod-sheet-label">ملف الإنتاج</span>
                 </button>
 
                 <button onclick="orderWhatsApp()" class="col-span-2 py-2 px-3 rounded-xl gold-bg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
@@ -312,6 +316,9 @@
         let transparentDesignDataUrl = '';
         let designNaturalW = 1200;
         let designNaturalH = 1200;
+
+        // تخزين إعدادات كل جهة (front, side_right, back, side_left) لتصديرها معاً في ملف واحد
+        const savedAnglesState = {};
 
         const zoomLevels = [1, 1.5, 2.2];
         let zoomIdx = 0;
@@ -510,6 +517,51 @@
             }
         };
 
+        function updateSavedAnglesBadge() {
+            const keys = Object.keys(savedAnglesState);
+            const badge = document.getElementById('saved-angles-badge');
+            const label = document.getElementById('prod-sheet-label');
+            ['front', 'side_right', 'back', 'side_left'].forEach(k => {
+                const el = document.getElementById('ang-' + k);
+                if (el) el.classList.toggle('has-saved', Boolean(savedAnglesState[k]));
+            });
+            if (keys.length > 0) {
+                badge.innerText = `${keys.length} جهات محفوظة`;
+                badge.classList.remove('hidden');
+                label.innerText = keys.length > 1 ? `ملف الإنتاج (${keys.length})` : 'ملف الإنتاج';
+            } else {
+                badge.classList.add('hidden');
+                label.innerText = 'ملف الإنتاج';
+            }
+        }
+
+        function captureCurrentAngleState() {
+            const box = document.getElementById('print-box');
+            const list = productSizes[currentProduct][currentAngle];
+            const cfg = list[currentSizeIndex] || list[0];
+            savedAnglesState[currentAngle] = {
+                angle: currentAngle,
+                angleLabel: angleNames[currentAngle],
+                sizeIndex: currentSizeIndex,
+                sizeShort: currentMode === 'free' ? 'مقاس حر مخصص' : cfg.short,
+                sizeLabel: currentMode === 'free' ? 'مقاس حر' : cfg.label,
+                top: box.style.top || cfg.top,
+                left: box.style.left || cfg.left,
+                width: box.style.width || (currentWcm * CM_TO_PERCENT) + '%',
+                height: box.style.height || (currentHcm * CM_TO_PERCENT) + '%',
+                wCm: currentWcm,
+                hCm: currentHcm,
+                mode: currentMode,
+                customMoved: customMoved,
+                colorName: currentColorName,
+                colorHex: currentColorHex,
+                isBgRemoved: isBgRemoved,
+                imgSrc: document.getElementById('print-img').src,
+                dpiText: document.getElementById('dpi-text').innerText
+            };
+            updateSavedAnglesBadge();
+        }
+
         function checkPrintDPI() {
             const wInches = currentWcm / 2.54;
             const hInches = currentHcm / 2.54;
@@ -568,6 +620,7 @@
                     ctx.putImageData(imgData, 0, 0);
                     transparentDesignDataUrl = c.toDataURL('image/png');
                     printImg.src = transparentDesignDataUrl;
+                    captureCurrentAngleState();
                 };
                 tempImg.src = originalDesignDataUrl;
             } else {
@@ -575,6 +628,7 @@
                 txt.innerText = 'تفريغ';
                 printBox.classList.remove('transparent-bg');
                 printImg.src = originalDesignDataUrl;
+                captureCurrentAngleState();
             }
         }
 
@@ -633,6 +687,9 @@
             document.getElementById('input-h-cm').value = currentHcm;
 
             checkPrintDPI();
+            if (hasUserUploadedDesign || customMoved || currentMode === 'free' || currentSizeIndex > 0) {
+                captureCurrentAngleState();
+            }
         }
 
         function switchMode(mode) {
@@ -745,11 +802,22 @@
                 activeBtn.classList.remove('text-stone-300');
             }
 
-            const list = productSizes[currentProduct][ang];
-            currentSizeIndex = (ang === 'back') ? list.length - 1 : 0;
-
-            renderSizesButtons();
-            selectSize(currentSizeIndex);
+            const saved = savedAnglesState[ang];
+            if (saved) {
+                currentSizeIndex = saved.sizeIndex;
+                currentMode = saved.mode;
+                customMoved = saved.customMoved;
+                renderSizesButtons();
+                const printBox = document.getElementById('print-box');
+                printBox.style.top = saved.top;
+                printBox.style.left = saved.left;
+                updateDimensionsUI(saved.wCm, saved.hCm, saved.sizeLabel);
+            } else {
+                const list = productSizes[currentProduct][ang];
+                currentSizeIndex = (ang === 'back') ? list.length - 1 : 0;
+                renderSizesButtons();
+                selectSize(currentSizeIndex);
+            }
         }
 
         function resetPosition() {
@@ -762,6 +830,8 @@
             printBox.classList.add('smooth-resize');
             printBox.style.top = (currentAngle === 'back') ? '48%' : '42%';
             printBox.style.left = (currentAngle === 'side_right') ? '45%' : (currentAngle === 'side_left') ? '52%' : '50%';
+            customMoved = true;
+            captureCurrentAngleState();
         }
 
         function setColor(hex, name, isDark, btn) {
@@ -775,6 +845,7 @@
 
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
             btn.classList.add('active');
+            captureCurrentAngleState();
         }
 
         function applyLoadedDesign(srcUrl) {
@@ -797,6 +868,7 @@
                 setPrintSelected(true);
                 if (currentMode === 'presets') selectSize(currentSizeIndex);
                 else applyManualCm('w');
+                captureCurrentAngleState();
             };
             tempImg.src = srcUrl;
         }
@@ -811,129 +883,145 @@
             reader.readAsDataURL(file);
         }
 
-        function saveProductionSheet() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1200;
-            canvas.height = 1360;
-            const ctx = canvas.getContext('2d');
-
-            ctx.fillStyle = '#0d0d0d';
-            ctx.fillRect(0, 0, 1200, 1360);
-
+        // رسم بطاقة جهة واحدة داخل ملف الإنتاج المجمّع
+        function drawSingleAngleCard(ctx, item, x, y, w, h) {
             ctx.fillStyle = '#181615';
-            ctx.fillRect(0, 0, 1200, 110);
-            ctx.strokeStyle = '#D4AF37';
-            ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.moveTo(0, 110); ctx.lineTo(1200, 110); ctx.stroke();
+            ctx.fillRect(x, y, w, h);
+            ctx.strokeStyle = 'rgba(212,175,55,0.45)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, w, h);
 
-            ctx.fillStyle = '#D4AF37';
-            ctx.font = 'bold 34px Cairo, sans-serif';
-            ctx.textAlign = 'right';
-            ctx.fillText('عِزوة | ورقة مواصفات الإنتاج والطباعة (Production Sheet)', 1160, 68);
-
-            const garmentEl = document.getElementById('garment-img');
-            const printEl = document.getElementById('print-img');
-            const printBox = document.getElementById('print-box');
+            const stageSize = Math.min(w - 40, h - 135);
+            const stageX = x + (w - stageSize) / 2;
+            const stageY = y + 18;
 
             ctx.fillStyle = '#000000';
-            ctx.fillRect(420, 140, 740, 740);
-            ctx.strokeStyle = 'rgba(212,175,55,0.4)';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(420, 140, 740, 740);
+            ctx.fillRect(stageX, stageY, stageSize, stageSize);
 
-            ctx.drawImage(garmentEl, 420, 140, 740, 740);
+            const angleImg = new Image();
+            angleImg.src = productImages[currentProduct][item.angle];
+            try { ctx.drawImage(angleImg, stageX, stageY, stageSize, stageSize); } catch (e) {}
 
-            if (currentColorHex !== 'transparent') {
+            if (item.colorHex !== 'transparent') {
                 ctx.save();
                 ctx.globalCompositeOperation = 'multiply';
-                ctx.fillStyle = currentColorHex;
-                ctx.fillRect(420, 140, 740, 740);
+                ctx.fillStyle = item.colorHex;
+                ctx.fillRect(stageX, stageY, stageSize, stageSize);
                 ctx.restore();
             }
 
-            const leftPct = parseFloat(printBox.style.left) / 100;
-            const topPct = parseFloat(printBox.style.top) / 100;
-            const wPct = parseFloat(printBox.style.width) / 100;
-            const hPct = parseFloat(printBox.style.height) / 100;
+            const leftPct = parseFloat(item.left) / 100;
+            const topPct = parseFloat(item.top) / 100;
+            const wPct = parseFloat(item.width) / 100;
+            const hPct = parseFloat(item.height) / 100;
 
-            const drawW = wPct * 740;
-            const drawH = hPct * 740;
-            const drawX = 420 + (leftPct * 740) - (drawW / 2);
-            const drawY = 140 + (topPct * 740) - (drawH / 2);
+            const drawW = wPct * stageSize;
+            const drawH = hPct * stageSize;
+            const drawX = stageX + (leftPct * stageSize) - (drawW / 2);
+            const drawY = stageY + (topPct * stageSize) - (drawH / 2);
+
+            const artImg = new Image();
+            artImg.crossOrigin = 'anonymous';
+            artImg.src = item.imgSrc;
 
             ctx.save();
-            if (!isBgRemoved && (currentColorHex === 'transparent' || currentColorHex === '#d8cab3')) {
+            if (!item.isBgRemoved && (item.colorHex === 'transparent' || item.colorHex === '#d8cab3')) {
                 ctx.globalCompositeOperation = 'multiply';
             }
-            ctx.drawImage(printEl, drawX, drawY, drawW, drawH);
+            try { ctx.drawImage(artImg, drawX, drawY, drawW, drawH); } catch (e) {}
             ctx.restore();
 
-            ctx.fillStyle = '#181615';
-            ctx.fillRect(40, 140, 350, 420);
-            ctx.strokeStyle = 'rgba(212,175,55,0.4)';
-            ctx.strokeRect(40, 140, 350, 420);
-
             ctx.fillStyle = '#D4AF37';
-            ctx.font = 'bold 20px Cairo, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('ملف الطباعة الصافي (Artwork)', 215, 180);
-
-            const boxSize = 270;
-            let artW = boxSize, artH = boxSize;
-            if (designAspectRatio >= 1) artH = boxSize / designAspectRatio;
-            else artW = boxSize * designAspectRatio;
-            ctx.drawImage(printEl, 40 + (350 - artW) / 2, 210 + (300 - artH) / 2, artW, artH);
-
-            ctx.fillStyle = '#181615';
-            ctx.fillRect(40, 580, 350, 300);
-            ctx.strokeRect(40, 580, 350, 300);
+            ctx.font = 'bold 24px Cairo, sans-serif';
             ctx.textAlign = 'right';
-            ctx.fillStyle = '#D4AF37';
-            ctx.font = 'bold 20px Cairo, sans-serif';
-            ctx.fillText('حالة الملف التقنية:', 365, 625);
+            ctx.fillText(`${item.angleLabel} — ${item.wCm} × ${item.hCm} سم`, x + w - 22, stageY + stageSize + 38);
 
-            ctx.fillStyle = '#e5e5e5';
+            ctx.fillStyle = '#d6d3d1';
             ctx.font = '18px Cairo, sans-serif';
-            ctx.fillText(`• تفريغ الخلفية: ${isBgRemoved ? 'مفعل (شفاف)' : 'أصلي'}`, 365, 670);
-            ctx.fillText(`• الدقة: ${document.getElementById('dpi-text').innerText.split('(')[1]?.replace(')', '') || '300 DPI'}`, 365, 710);
-            ctx.fillText(`• نوع الطباعة: DTF عالي الثبات`, 365, 750);
-            ctx.fillText(`• الموضع: ${customMoved ? 'مخصص يدوياً' : 'قياسي موزون'}`, 365, 790);
+            ctx.fillText(`اللون: ${item.colorName} | المقاس: ${item.sizeShort}`, x + w - 22, stageY + stageSize + 72);
+        }
+
+        // تصدير جميع الجهات المحددة في ملف إنتاج مجمّع واحد (أو جهة واحدة إذا لم يتم تعديل غيرها)
+        function saveProductionSheet() {
+            captureCurrentAngleState();
+            const orderKeys = ['front', 'side_right', 'back', 'side_left'].filter(k => Boolean(savedAnglesState[k]));
+            const items = orderKeys.length > 0 ? orderKeys.map(k => savedAnglesState[k]) : [savedAnglesState[currentAngle]];
+
+            const cols = items.length > 1 ? 2 : 1;
+            const rows = Math.ceil(items.length / cols);
+            const cardW = 560;
+            const cardH = 620;
+            const gap = 24;
+
+            const canvasW = cols === 2 ? (cardW * 2 + gap * 3) : 1200;
+            const summaryH = 210;
+            const headerH = 105;
+            const canvasH = headerH + (rows * cardH) + ((rows + 1) * gap) + summaryH;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = canvasW;
+            canvas.height = canvasH;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#0d0d0d';
+            ctx.fillRect(0, 0, canvasW, canvasH);
 
             ctx.fillStyle = '#181615';
-            ctx.fillRect(40, 910, 1120, 410);
+            ctx.fillRect(0, 0, canvasW, headerH);
             ctx.strokeStyle = '#D4AF37';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(40, 910, 1120, 410);
-
-            ctx.fillStyle = '#D4AF37';
-            ctx.font = 'bold 28px Cairo, sans-serif';
-            ctx.textAlign = 'right';
-            ctx.fillText('بيانات التنفيذ المعتمدة:', 1120, 965);
-
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 26px Cairo, sans-serif';
-            ctx.fillText(`1. القطعة: ${productNames[currentProduct]}`, 1120, 1030);
-            ctx.fillText(`2. لون القماش: ${currentColorName}`, 1120, 1090);
-            ctx.fillText(`3. جهة الطباعة: ${angleNames[currentAngle]}`, 1120, 1150);
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(0, headerH); ctx.lineTo(canvasW, headerH); ctx.stroke();
 
             ctx.fillStyle = '#D4AF37';
             ctx.font = 'bold 32px Cairo, sans-serif';
-            ctx.fillText(`4. المقاس الفعلي للتنفيذ: ${currentWcm} × ${currentHcm} سم`, 1120, 1225);
+            ctx.textAlign = 'right';
+            ctx.fillText(`عِزوة | ملف الإنتاج المجمّع (${items.length} ${items.length > 1 ? 'جهات' : 'جهة'})`, canvasW - 32, 65);
+
+            items.forEach((item, idx) => {
+                const cIdx = idx % cols;
+                const rIdx = Math.floor(idx / cols);
+                const x = cols === 2 ? (gap + cIdx * (cardW + gap)) : ((canvasW - cardW) / 2);
+                const y = headerH + gap + rIdx * (cardH + gap);
+                drawSingleAngleCard(ctx, item, x, y, cardW, cardH);
+            });
+
+            const sumY = headerH + gap + rows * (cardH + gap);
+            ctx.fillStyle = '#181615';
+            ctx.fillRect(gap, sumY, canvasW - gap * 2, 175);
+            ctx.strokeStyle = '#D4AF37';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(gap, sumY, canvasW - gap * 2, 175);
+
+            ctx.fillStyle = '#D4AF37';
+            ctx.font = 'bold 24px Cairo, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(`القطعة: ${productNames[currentProduct]} | اللون: ${currentColorName} | الطباعة: DTF`, canvasW - gap - 24, sumY + 48);
+
+            ctx.fillStyle = '#f5f5f4';
+            ctx.font = '20px Cairo, sans-serif';
+            const dimsSummary = items.map(i => `${i.angleLabel}: (${i.wCm}×${i.hCm} سم)`).join('  •  ');
+            ctx.fillText(`الأبعاد المعتمدة: ${dimsSummary}`, canvasW - gap - 24, sumY + 95);
+
+            ctx.fillStyle = '#a8a29e';
+            ctx.font = '18px Cairo, sans-serif';
+            ctx.fillText(`تفريغ الخلفية: ${isBgRemoved ? 'مفعل (شفاف)' : 'أصلي'}  |  الدقة: ${document.getElementById('dpi-text').innerText.split('(')[1]?.replace(')', '') || '300 DPI'}`, canvasW - gap - 24, sumY + 138);
 
             const link = document.createElement('a');
-            link.download = `EZWA-Production-${currentProduct}-${currentAngle}-${currentWcm}x${currentHcm}cm.png`;
+            const tagName = items.length > 1 ? `Combined-${items.length}sides` : `${currentAngle}-${currentWcm}x${currentHcm}cm`;
+            link.download = `EZWA-Production-${currentProduct}-${tagName}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
 
         function orderWhatsApp() {
-            const faceName = angleNames[currentAngle];
+            captureCurrentAngleState();
+            const orderKeys = ['front', 'side_right', 'back', 'side_left'].filter(k => Boolean(savedAnglesState[k]));
+            const items = orderKeys.length > 0 ? orderKeys.map(k => savedAnglesState[k]) : [savedAnglesState[currentAngle]];
             const prodName = productNames[currentProduct];
-            const cfg = productSizes[currentProduct][currentAngle][currentSizeIndex];
-            const modeText = currentMode === 'free' ? 'مقاس حر مخصص' : `${cfg.short}`;
-            const posNote = customMoved ? ' (موضع مخصص)' : '';
             const bgNote = isBgRemoved ? ' (مع تفريغ الخلفية)' : '';
-            const text = `السلام عليكم، اعتمدت طلب الطباعة في الاستوديو:\n- القطعة: ${prodName}\n- اللون: ${currentColorName}\n- الجهة: ${faceName}${posNote}\n- المقاس: ${modeText}\n- الأبعاد الدقيقة: ${currentWcm} × ${currentHcm} سم${bgNote}`;
+
+            const lines = items.map(i => `• ${i.angleLabel}: ${i.sizeShort} (${i.wCm} × ${i.hCm} سم)${i.customMoved ? ' - موضع مخصص' : ''}`).join('\n');
+            const text = `السلام عليكم، اعتمدت طلب الطباعة في الاستوديو:\n- القطعة: ${prodName}\n- اللون: ${currentColorName}${bgNote}\n- الجهات والمقاسات:\n${lines}`;
             const url = `https://wa.me/966502777884?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
@@ -1050,6 +1138,7 @@
                 printBox.style.left = xPercent + '%';
                 printBox.style.top = yPercent + '%';
                 customMoved = true;
+                captureCurrentAngleState();
             }
         });
 
