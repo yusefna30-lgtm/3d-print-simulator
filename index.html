@@ -232,10 +232,15 @@
             </button>
         </div>
 
-        <div class="mt-1 w-full max-w-md flex justify-center">
-            <button id="btn-save-angle" onclick="saveCurrentAngle()" class="w-full py-1 px-3 rounded-xl glass-panel border border-emerald-400/50 text-emerald-300 font-bold text-[10.5px] flex items-center justify-center gap-1.5 hover:bg-emerald-950/40 transition">
+        <div class="mt-1 w-full max-w-md grid grid-cols-3 gap-1.5">
+            <button id="btn-save-angle" onclick="saveCurrentAngle()" class="col-span-2 py-1 px-2.5 rounded-xl glass-panel border border-emerald-400/50 text-emerald-300 font-bold text-[10px] flex items-center justify-center gap-1 hover:bg-emerald-950/40 transition truncate">
                 <span id="save-angle-icon">💾</span>
                 <span id="save-angle-text">حفظ تصميم الجهة</span>
+            </button>
+
+            <button id="btn-clear-saved" onclick="clearSavedAngles()" class="col-span-1 py-1 px-2 rounded-xl glass-panel border border-rose-500/40 text-rose-300 font-bold text-[10px] flex items-center justify-center gap-1 hover:bg-rose-950/40 transition truncate">
+                <span>🗑</span>
+                <span>مسح المحفوظات</span>
             </button>
         </div>
 
@@ -568,12 +573,17 @@
             }
 
             if (savedAnglesState[currentAngle]) {
-                saveTxt.innerText = `تم حفظ ${shortAngleNames[currentAngle]} (تحديث الحفظ)`;
+                saveTxt.innerText = `محفوظ: ${shortAngleNames[currentAngle]}`;
                 saveBtn.classList.add('bg-emerald-950/50');
             } else {
-                saveTxt.innerText = `حفظ تصميم ${shortAngleNames[currentAngle]}`;
+                saveTxt.innerText = `حفظ ${shortAngleNames[currentAngle]}`;
                 saveBtn.classList.remove('bg-emerald-950/50');
             }
+        }
+
+        function clearSavedAngles() {
+            Object.keys(savedAnglesState).forEach(k => delete savedAnglesState[k]);
+            updateSaveButtonUI();
         }
 
         function buildAngleSnapshot(angKey) {
